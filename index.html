@@ -3,18 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LS 모터 보호 계산기 (최종-한단계업)</title>
+<title>LS 모터 보호 계산기 (KIV+CV)</title>
 <style>
 body{font-family:-apple-system;margin:20px;background:#111;color:#eee}
 input,select,button{font-size:18px;padding:12px;margin:6px 0;width:100%}
 .card{background:#1b1b1b;padding:15px;border-radius:12px}
 a{color:#4da3ff}
+.row{display:flex;justify-content:space-between;gap:10px}
 .small{font-size:13px;color:#b7c2cc;line-height:1.45;margin-top:10px}
+.kv{margin-top:10px;font-size:18px;line-height:1.65}
 </style>
 </head>
 <body>
 
-<h2>LS 모터 보호 계산기 (현장 최종)</h2>
+<h2>LS 모터 보호 계산기 (현장)</h2>
 
 <div class="card">
   <select id="phase">
@@ -37,11 +39,11 @@ a{color:#4da3ff}
 
   <button onclick="calc()">계산</button>
 
-  <div id="out" style="margin-top:8px;font-size:18px;line-height:1.65"></div>
+  <div id="out" class="kv"></div>
 
   <div class="small">
-    기준(간이): 전선은 1.25×FLA 허용전류 기준(기동방식 영향 없음).<br>
-    “숫자가 걸리면 한 단계 업” 규칙 적용: MC/전선은 <b>동일값이면 다음 단계</b>로 선택합니다.
+    전선 기준: <b>ceil(1.25×FLA)</b>를 기준전류로 잡고, “걸리면 한 단계 업” 규칙(허용전류가 기준보다 <b>큰</b> 최소 SQ) 적용.<br>
+    KIV(판넬 내부) / CV(출선 케이블) <b>둘 다</b> 추천값을 표시합니다.
   </div>
 </div>
 
@@ -49,19 +51,16 @@ a{color:#4da3ff}
 function naver(q){
   return "https://search.naver.com/search.naver?query="+encodeURIComponent(q);
 }
-
-// ===== 전류 계산(근사) =====
 function hpToKw(hp){ return hp*0.7457; }
 
-// ===== EOCR (간이) =====
+// EOCR(간이)
 function eocr(I){
   if(I<=22) return "GMP22-2P";
   if(I<=40) return "GMP40-2P";
   return "GMP60-3TZ";
 }
 
-// ===== MC: 딱 맞게 + 걸리면 1단계 업, b타입 =====
-// 규칙: I < 단계A 일 때 그 단계 선택. (I == 단계A 이면 다음 단계로 올림)
+// MC: 딱맞게 + 걸리면 1단계 업, b타입
 function mc(I){
   const steps=[6,9,12,18,22,32,40,50,65,75,85,100,150,185,225];
   for(let i=0;i<steps.length;i++){
@@ -72,15 +71,13 @@ function mc(I){
   return "대용량 MC(별도 선정)";
 }
 
-// ===== 차단기(ABN): 기동방식 배수는 차단기 AT에만 적용 =====
+// 차단기(ABN): 기동방식 배수는 차단기 AT에만 적용
 function breaker(I, phase, startMode){
   const mult={star:1.8,dol:2.2,inv:1.6}[startMode] ?? 1.8;
-  const at=Math.ceil((I*mult)/5)*5; // 5A 단위 올림
+  const at=Math.ceil((I*mult)/5)*5;
 
-  // AF 선정(간이): AT가 들어가는 최소 프레임
   let af=(at<=30)?30:(at<=50)?50:(at<=100)?100:(at<=225)?225:(at<=400)?400:800;
 
-  // 2P/3P 코드(간이)
   let code;
   if(phase==="single"){
     code = (af===30)?"32c":(af===50)?"52c":(af===100)?"102c":(af===225)?"222c":(af===400)?"402c":"802c";
@@ -91,10 +88,32 @@ function breaker(I, phase, startMode){
   return {text:`ABN ${code} ${pole} ${af}AF/${at}AT`, code};
 }
 
-// ===== 전선: 1.25×FLA 기준 + 걸리면 1단계 업 =====
-// 규칙: 허용전류(A) > 1.25×FLA 인 최소 SQ 선택 (동일이면 다음 단계로 올림)
-function cableSq(I){
-  const target=I*1.25;
+// 공통: 기준전류
+function cableTarget(I){ return Math.ceil(I*1.25); }
+
+// KIV 허용전류(보수) - 판넬 내부배선
+function cableKIV(I){
+  const target = cableTarget(I);
+  const tbl=[
+    {sq:"1.5㎟", A:18},
+    {sq:"2.5㎟", A:24},
+    {sq:"4㎟",   A:32},
+    {sq:"6㎟",   A:41},
+    {sq:"10㎟",  A:57},
+    {sq:"16㎟",  A:76},
+    {sq:"25㎟",  A:101},
+    {sq:"35㎟",  A:125},
+    {sq:"50㎟",  A:151},
+    {sq:"70㎟",  A:192},
+    {sq:"95㎟",  A:232}
+  ];
+  for(const r of tbl){ if(r.A > target) return r.sq; }
+  return tbl[tbl.length-1].sq;
+}
+
+// CV 허용전류(낙관~중간) - 출선 케이블(트레이/관로 일반 가정)
+function cableCV(I){
+  const target = cableTarget(I);
   const tbl=[
     {sq:"1.5㎟", A:20},
     {sq:"2.5㎟", A:27},
@@ -108,9 +127,7 @@ function cableSq(I){
     {sq:"70㎟",  A:210},
     {sq:"95㎟",  A:255}
   ];
-  for(let i=0;i<tbl.length;i++){
-    if(tbl[i].A > target) return tbl[i].sq; // '>' 로 “걸리면 업” 반영
-  }
+  for(const r of tbl){ if(r.A > target) return r.sq; }
   return tbl[tbl.length-1].sq;
 }
 
@@ -125,7 +142,6 @@ function calc(){
 
   const kw = (unit==="kw") ? x : hpToKw(x);
 
-  // 기본전압/역률/효율 근사
   const I = (phase==="single")
     ? (1000*kw)/(220*0.90*0.85)
     : (1000*kw)/(1.732*380*0.85*0.90);
@@ -134,15 +150,20 @@ function calc(){
   const set = (I*1.10);
   const mcx = mc(I);
   const br = breaker(I, phase, start);
-  const cab = cableSq(I);
+
+  const tgt = cableTarget(I);
+  const kiv = cableKIV(I);
+  const cv  = cableCV(I);
 
   document.getElementById("out").innerHTML =
     `정격전류: <b>${I.toFixed(1)}A</b><br><br>
      EOCR: <a target="_blank" href="${naver('LS '+eo+' EOCR')}">${eo}</a><br>
      EOCR 세팅: <b>${set.toFixed(1)}A</b><br><br>
      MC: <a target="_blank" href="${naver('LS Metasol '+mcx)}">${mcx}</a><br>
-     차단기: <a target="_blank" href="${naver('LS ABN '+br.code+' MCCB')}">${br.text}</a><br>
-     전선: <b>${cab}</b>`;
+     차단기: <a target="_blank" href="${naver('LS ABN '+br.code+' MCCB')}">${br.text}</a><br><br>
+     전선 기준전류: <b>${tgt}A</b><br>
+     전선(KIV): <b>${kiv}</b><br>
+     전선(CV): <b>${cv}</b>`;
 }
 </script>
 
