@@ -3,103 +3,146 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>모터 보호 계산기 (네이버 연동)</title>
+<title>LS 모터 보호 계산기 (최종-한단계업)</title>
 <style>
 body{font-family:-apple-system;margin:20px;background:#111;color:#eee}
 input,select,button{font-size:18px;padding:12px;margin:6px 0;width:100%}
 .card{background:#1b1b1b;padding:15px;border-radius:12px}
 a{color:#4da3ff}
+.small{font-size:13px;color:#b7c2cc;line-height:1.45;margin-top:10px}
 </style>
 </head>
 <body>
 
-<h2>LS 모터 보호 계산기</h2>
+<h2>LS 모터 보호 계산기 (현장 최종)</h2>
 
 <div class="card">
+  <select id="phase">
+    <option value="three">삼상</option>
+    <option value="single">단상</option>
+  </select>
 
-<select id="phase">
-<option value="three">삼상</option>
-<option value="single">단상</option>
-</select>
+  <select id="unit">
+    <option value="hp">HP</option>
+    <option value="kw">kW</option>
+  </select>
 
-<select id="unit">
-<option value="hp">HP</option>
-<option value="kw">kW</option>
-</select>
+  <input id="val" inputmode="decimal" placeholder="용량 입력 (예: 7.5)">
 
-<input id="val" placeholder="값 입력">
+  <select id="start">
+    <option value="star" selected>Y-Δ (기본)</option>
+    <option value="dol">직입</option>
+    <option value="inv">인버터</option>
+  </select>
 
-<select id="start">
-<option value="star" selected>Y-Δ (기본)</option>
-<option value="dol">직입</option>
-<option value="inv">인버터</option>
-</select>
+  <button onclick="calc()">계산</button>
 
-<button onclick="calc()">계산</button>
+  <div id="out" style="margin-top:8px;font-size:18px;line-height:1.65"></div>
 
-<h3 id="out"></h3>
-
+  <div class="small">
+    기준(간이): 전선은 1.25×FLA 허용전류 기준(기동방식 영향 없음).<br>
+    “숫자가 걸리면 한 단계 업” 규칙 적용: MC/전선은 <b>동일값이면 다음 단계</b>로 선택합니다.
+  </div>
 </div>
 
 <script>
 function naver(q){
- return "https://search.naver.com/search.naver?query="+encodeURIComponent(q);
+  return "https://search.naver.com/search.naver?query="+encodeURIComponent(q);
 }
 
+// ===== 전류 계산(근사) =====
+function hpToKw(hp){ return hp*0.7457; }
+
+// ===== EOCR (간이) =====
 function eocr(I){
- if(I<=22) return "GMP22-2P";
- if(I<=40) return "GMP40-2P";
- return "GMP60";
+  if(I<=22) return "GMP22-2P";
+  if(I<=40) return "GMP40-2P";
+  return "GMP60-3TZ";
 }
 
+// ===== MC: 딱 맞게 + 걸리면 1단계 업, b타입 =====
+// 규칙: I < 단계A 일 때 그 단계 선택. (I == 단계A 이면 다음 단계로 올림)
 function mc(I){
- let t=I*1.25;
- if(t<=9) return "MC-9a";
- if(t<=12) return "MC-12a";
- if(t<=18) return "MC-18a";
- if(t<=22) return "MC-22a";
- return "MC-32a";
+  const steps=[6,9,12,18,22,32,40,50,65,75,85,100,150,185,225];
+  for(let i=0;i<steps.length;i++){
+    const s=steps[i];
+    if(I < s) return "MC-"+s+"b";
+    if(I === s && i < steps.length-1) return "MC-"+steps[i+1]+"b";
+  }
+  return "대용량 MC(별도 선정)";
 }
 
-function breaker(I,p){
- let mult={star:1.8,dol:2.2,inv:1.6}[start.value];
- let at=Math.ceil(I*mult/5)*5;
- let af=(at<=30)?30:(at<=50)?50:100;
- let code=(p=="single")?(af==30?"32c":af==50?"52c":"102c")
-                         :(af==30?"33c":af==50?"53c":"103c");
- let pole=(p=="single")?"2P":"3P";
- return `ABN ${code} ${pole} ${af}AF/${at}AT`;
+// ===== 차단기(ABN): 기동방식 배수는 차단기 AT에만 적용 =====
+function breaker(I, phase, startMode){
+  const mult={star:1.8,dol:2.2,inv:1.6}[startMode] ?? 1.8;
+  const at=Math.ceil((I*mult)/5)*5; // 5A 단위 올림
+
+  // AF 선정(간이): AT가 들어가는 최소 프레임
+  let af=(at<=30)?30:(at<=50)?50:(at<=100)?100:(at<=225)?225:(at<=400)?400:800;
+
+  // 2P/3P 코드(간이)
+  let code;
+  if(phase==="single"){
+    code = (af===30)?"32c":(af===50)?"52c":(af===100)?"102c":(af===225)?"222c":(af===400)?"402c":"802c";
+  }else{
+    code = (af===30)?"33c":(af===50)?"53c":(af===100)?"103c":(af===225)?"223c":(af===400)?"403c":"803c";
+  }
+  const pole=(phase==="single")?"2P":"3P";
+  return {text:`ABN ${code} ${pole} ${af}AF/${at}AT`, code};
 }
 
-function cable(I){
- if(I<16) return "2.5㎟";
- if(I<26) return "4㎟";
- if(I<36) return "6㎟";
- return "10㎟";
+// ===== 전선: 1.25×FLA 기준 + 걸리면 1단계 업 =====
+// 규칙: 허용전류(A) > 1.25×FLA 인 최소 SQ 선택 (동일이면 다음 단계로 올림)
+function cableSq(I){
+  const target=I*1.25;
+  const tbl=[
+    {sq:"1.5㎟", A:20},
+    {sq:"2.5㎟", A:27},
+    {sq:"4㎟",   A:36},
+    {sq:"6㎟",   A:47},
+    {sq:"10㎟",  A:65},
+    {sq:"16㎟",  A:85},
+    {sq:"25㎟",  A:110},
+    {sq:"35㎟",  A:135},
+    {sq:"50㎟",  A:165},
+    {sq:"70㎟",  A:210},
+    {sq:"95㎟",  A:255}
+  ];
+  for(let i=0;i<tbl.length;i++){
+    if(tbl[i].A > target) return tbl[i].sq; // '>' 로 “걸리면 업” 반영
+  }
+  return tbl[tbl.length-1].sq;
 }
 
 function calc(){
- let p=phase.value;
- let v=Number(val.value);
- if(!v) return;
+  const phase = document.getElementById("phase").value;
+  const unit  = document.getElementById("unit").value;
+  const start = document.getElementById("start").value;
 
- let kw=(unit.value=="kw")?v:v*0.746;
+  const raw = String(document.getElementById("val").value||"").replace(",",".");
+  const x = Number(raw);
+  if(!x || x<=0){ document.getElementById("out").innerHTML="값을 입력하세요."; return; }
 
- let I=(p=="single")
- ? (1000*kw)/(220*0.9*0.85)
- : (1000*kw)/(1.732*380*0.85*0.9);
+  const kw = (unit==="kw") ? x : hpToKw(x);
 
- let eo=eocr(I);
- let mcx=mc(I);
- let br=breaker(I,p);
+  // 기본전압/역률/효율 근사
+  const I = (phase==="single")
+    ? (1000*kw)/(220*0.90*0.85)
+    : (1000*kw)/(1.732*380*0.85*0.90);
 
- out.innerHTML=
- `정격전류: ${I.toFixed(1)}A<br><br>
- EOCR: <a target=_blank href="${naver(eo+' EOCR')}">${eo}</a><br>
- EOCR 세팅: ${(I*1.1).toFixed(1)}A<br><br>
- MC: <a target=_blank href="${naver('LS '+mcx+' 접촉기')}">${mcx}</a><br>
- 차단기: <a target=_blank href="${naver(br+' MCCB')}">${br}</a><br>
- 전선: ${cable(I)}`;
+  const eo = eocr(I);
+  const set = (I*1.10);
+  const mcx = mc(I);
+  const br = breaker(I, phase, start);
+  const cab = cableSq(I);
+
+  document.getElementById("out").innerHTML =
+    `정격전류: <b>${I.toFixed(1)}A</b><br><br>
+     EOCR: <a target="_blank" href="${naver('LS '+eo+' EOCR')}">${eo}</a><br>
+     EOCR 세팅: <b>${set.toFixed(1)}A</b><br><br>
+     MC: <a target="_blank" href="${naver('LS Metasol '+mcx)}">${mcx}</a><br>
+     차단기: <a target="_blank" href="${naver('LS ABN '+br.code+' MCCB')}">${br.text}</a><br>
+     전선: <b>${cab}</b>`;
 }
 </script>
 
