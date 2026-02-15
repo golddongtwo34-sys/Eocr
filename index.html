@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>EOCR 계산기 (LS)</title>
+<title>모터 보호 계산기 (네이버 연동)</title>
 <style>
 body{font-family:-apple-system;margin:20px;background:#111;color:#eee}
 input,select,button{font-size:18px;padding:12px;margin:6px 0;width:100%}
@@ -13,9 +13,10 @@ a{color:#4da3ff}
 </head>
 <body>
 
-<h2>모터 보호기 계산기 (LS)</h2>
+<h2>LS 모터 보호 계산기</h2>
 
 <div class="card">
+
 <select id="phase">
 <option value="three">삼상</option>
 <option value="single">단상</option>
@@ -28,80 +29,77 @@ a{color:#4da3ff}
 
 <input id="val" placeholder="값 입력">
 
+<select id="start">
+<option value="star" selected>Y-Δ (기본)</option>
+<option value="dol">직입</option>
+<option value="inv">인버터</option>
+</select>
+
 <button onclick="calc()">계산</button>
 
 <h3 id="out"></h3>
+
 </div>
 
 <script>
-function round(a){
- return (Math.round(a*10)/10).toFixed(1)
+function naver(q){
+ return "https://search.naver.com/search.naver?query="+encodeURIComponent(q);
 }
 
-function lsLink(name){
- return "https://www.ls-electric.com/ko/search?searchKeyword="
-        + encodeURIComponent(name);
-}
-
-function eocrModel(I){
+function eocr(I){
  if(I<=22) return "GMP22-2P";
  if(I<=40) return "GMP40-2P";
- if(I<=60) return "GMP60-3TZ";
- return "외부CT형";
+ return "GMP60";
 }
 
-function mcModel(I){
+function mc(I){
  let t=I*1.25;
  if(t<=9) return "MC-9a";
  if(t<=12) return "MC-12a";
  if(t<=18) return "MC-18a";
  if(t<=22) return "MC-22a";
- if(t<=32) return "MC-32a";
- if(t<=40) return "MC-40a";
- return "MC-50a";
+ return "MC-32a";
 }
 
-function breaker(I){
- let at=Math.ceil(I*2.2/5)*5;
- if(at<=30) return "ABN33c";
- if(at<=50) return "ABN53c";
- if(at<=100) return "ABN103c";
- return "ABN223c";
+function breaker(I,p){
+ let mult={star:1.8,dol:2.2,inv:1.6}[start.value];
+ let at=Math.ceil(I*mult/5)*5;
+ let af=(at<=30)?30:(at<=50)?50:100;
+ let code=(p=="single")?(af==30?"32c":af==50?"52c":"102c")
+                         :(af==30?"33c":af==50?"53c":"103c");
+ let pole=(p=="single")?"2P":"3P";
+ return `ABN ${code} ${pole} ${af}AF/${at}AT`;
 }
 
 function cable(I){
- if(I<16) return 2.5;
- if(I<26) return 4;
- if(I<36) return 6;
- return 10;
+ if(I<16) return "2.5㎟";
+ if(I<26) return "4㎟";
+ if(I<36) return "6㎟";
+ return "10㎟";
 }
 
 function calc(){
  let p=phase.value;
- let u=unit.value;
  let v=Number(val.value);
  if(!v) return;
 
- let kw=(u=="kw")?v:v*0.746;
+ let kw=(unit.value=="kw")?v:v*0.746;
 
  let I=(p=="single")
  ? (1000*kw)/(220*0.9*0.85)
  : (1000*kw)/(1.732*380*0.85*0.9);
 
- let e=eocrModel(I);
- let m=mcModel(I);
- let b=breaker(I);
- let set=round(I*1.1);
+ let eo=eocr(I);
+ let mcx=mc(I);
+ let br=breaker(I,p);
 
  out.innerHTML=
- "정격전류: "+round(I)+"A<br><br>"+
-
- "EOCR: <a target=_blank href='"+lsLink(e)+"'>"+e+"</a><br>"+
- "EOCR 세팅: "+set+"A<br><br>"+
-
- "MC: <a target=_blank href='"+lsLink(m)+"'>"+m+"</a><br>"+
- "차단기: <a target=_blank href='"+lsLink(b)+"'>"+b+"</a><br>"+
- "전선: "+cable(I)+"㎟";
+ `정격전류: ${I.toFixed(1)}A<br><br>
+ EOCR: <a target=_blank href="${naver(eo+' EOCR')}">${eo}</a><br>
+ EOCR 세팅: ${(I*1.1).toFixed(1)}A<br><br>
+ MC: <a target=_blank href="${naver('LS '+mcx+' 접촉기')}">${mcx}</a><br>
+ 차단기: <a target=_blank href="${naver(br+' MCCB')}">${br}</a><br>
+ 전선: ${cable(I)}`;
 }
 </script>
 
