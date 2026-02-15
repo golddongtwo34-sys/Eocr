@@ -3,169 +3,148 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LS 모터 보호 계산기 (KIV+CV)</title>
+<title>LS 모터 선정 계산기 PRO</title>
+
 <style>
-body{font-family:-apple-system;margin:20px;background:#111;color:#eee}
-input,select,button{font-size:18px;padding:12px;margin:6px 0;width:100%}
-.card{background:#1b1b1b;padding:15px;border-radius:12px}
-a{color:#4da3ff}
-.row{display:flex;justify-content:space-between;gap:10px}
-.small{font-size:13px;color:#b7c2cc;line-height:1.45;margin-top:10px}
-.kv{margin-top:10px;font-size:18px;line-height:1.65}
+body{
+ background:#0f172a;
+ color:#e5e7eb;
+ font-family:system-ui;
+ padding:20px;
+}
+.card{
+ background:#111827;
+ padding:22px;
+ border-radius:16px;
+ max-width:520px;
+ margin:auto;
+ box-shadow:0 0 30px rgba(0,0,0,0.6);
+}
+h2{
+ text-align:center;
+ color:#38bdf8;
+}
+select,input,button{
+ width:100%;
+ padding:14px;
+ margin:8px 0;
+ border-radius:10px;
+ border:none;
+ font-size:16px;
+}
+button{
+ background:#38bdf8;
+ color:#000;
+ font-weight:bold;
+}
+.result{
+ margin-top:18px;
+ line-height:1.8;
+ font-size:17px;
+}
+a{color:#22c55e;text-decoration:none}
+b{color:#22c55e}
 </style>
 </head>
+
 <body>
-
-<h2>LS 모터 보호 계산기 (현장)</h2>
-
 <div class="card">
-  <select id="phase">
-    <option value="three">삼상</option>
-    <option value="single">단상</option>
-  </select>
 
-  <select id="unit">
-    <option value="hp">HP</option>
-    <option value="kw">kW</option>
-  </select>
+<h2>LS 모터 선정 계산기 PRO</h2>
 
-  <input id="val" inputmode="decimal" placeholder="용량 입력 (예: 7.5)">
+<select id="phase">
+<option value="3">삼상</option>
+<option value="1">단상</option>
+</select>
 
-  <select id="start">
-    <option value="star" selected>Y-Δ (기본)</option>
-    <option value="dol">직입</option>
-    <option value="inv">인버터</option>
-  </select>
+<select id="unit">
+<option value="hp">HP</option>
+<option value="kw">kW</option>
+</select>
 
-  <button onclick="calc()">계산</button>
+<input id="power" placeholder="용량 입력">
 
-  <div id="out" class="kv"></div>
+<select id="start">
+<option value="1.8">Y-Δ 기동</option>
+<option value="2.2">직입 기동</option>
+<option value="1.6">인버터</option>
+</select>
 
-  <div class="small">
-    전선 기준: <b>ceil(1.25×FLA)</b>를 기준전류로 잡고, “걸리면 한 단계 업” 규칙(허용전류가 기준보다 <b>큰</b> 최소 SQ) 적용.<br>
-    KIV(판넬 내부) / CV(출선 케이블) <b>둘 다</b> 추천값을 표시합니다.
-  </div>
+<button onclick="calc()">계산</button>
+
+<div id="out" class="result"></div>
+
 </div>
 
 <script>
+
 function naver(q){
-  return "https://search.naver.com/search.naver?query="+encodeURIComponent(q);
-}
-function hpToKw(hp){ return hp*0.7457; }
-
-// EOCR(간이)
-function eocr(I){
-  if(I<=22) return "GMP22-2P";
-  if(I<=40) return "GMP40-2P";
-  return "GMP60-3TZ";
-}
-
-// MC: 딱맞게 + 걸리면 1단계 업, b타입
-function mc(I){
-  const steps=[6,9,12,18,22,32,40,50,65,75,85,100,150,185,225];
-  for(let i=0;i<steps.length;i++){
-    const s=steps[i];
-    if(I < s) return "MC-"+s+"b";
-    if(I === s && i < steps.length-1) return "MC-"+steps[i+1]+"b";
-  }
-  return "대용량 MC(별도 선정)";
-}
-
-// 차단기(ABN): 기동방식 배수는 차단기 AT에만 적용
-function breaker(I, phase, startMode){
-  const mult={star:1.8,dol:2.2,inv:1.6}[startMode] ?? 1.8;
-  const at=Math.ceil((I*mult)/5)*5;
-
-  let af=(at<=30)?30:(at<=50)?50:(at<=100)?100:(at<=225)?225:(at<=400)?400:800;
-
-  let code;
-  if(phase==="single"){
-    code = (af===30)?"32c":(af===50)?"52c":(af===100)?"102c":(af===225)?"222c":(af===400)?"402c":"802c";
-  }else{
-    code = (af===30)?"33c":(af===50)?"53c":(af===100)?"103c":(af===225)?"223c":(af===400)?"403c":"803c";
-  }
-  const pole=(phase==="single")?"2P":"3P";
-  return {text:`ABN ${code} ${pole} ${af}AF/${at}AT`, code};
-}
-
-// 공통: 기준전류
-function cableTarget(I){ return Math.ceil(I*1.25); }
-
-// KIV 허용전류(보수) - 판넬 내부배선
-function cableKIV(I){
-  const target = cableTarget(I);
-  const tbl=[
-    {sq:"1.5㎟", A:18},
-    {sq:"2.5㎟", A:24},
-    {sq:"4㎟",   A:32},
-    {sq:"6㎟",   A:41},
-    {sq:"10㎟",  A:57},
-    {sq:"16㎟",  A:76},
-    {sq:"25㎟",  A:101},
-    {sq:"35㎟",  A:125},
-    {sq:"50㎟",  A:151},
-    {sq:"70㎟",  A:192},
-    {sq:"95㎟",  A:232}
-  ];
-  for(const r of tbl){ if(r.A > target) return r.sq; }
-  return tbl[tbl.length-1].sq;
-}
-
-// CV 허용전류(낙관~중간) - 출선 케이블(트레이/관로 일반 가정)
-function cableCV(I){
-  const target = cableTarget(I);
-  const tbl=[
-    {sq:"1.5㎟", A:20},
-    {sq:"2.5㎟", A:27},
-    {sq:"4㎟",   A:36},
-    {sq:"6㎟",   A:47},
-    {sq:"10㎟",  A:65},
-    {sq:"16㎟",  A:85},
-    {sq:"25㎟",  A:110},
-    {sq:"35㎟",  A:135},
-    {sq:"50㎟",  A:165},
-    {sq:"70㎟",  A:210},
-    {sq:"95㎟",  A:255}
-  ];
-  for(const r of tbl){ if(r.A > target) return r.sq; }
-  return tbl[tbl.length-1].sq;
+ return "https://search.naver.com/search.naver?query="+encodeURIComponent(q);
 }
 
 function calc(){
-  const phase = document.getElementById("phase").value;
-  const unit  = document.getElementById("unit").value;
-  const start = document.getElementById("start").value;
 
-  const raw = String(document.getElementById("val").value||"").replace(",",".");
-  const x = Number(raw);
-  if(!x || x<=0){ document.getElementById("out").innerHTML="값을 입력하세요."; return; }
+let ph=phase.value;
+let p=parseFloat(power.value);
+if(!p) return;
 
-  const kw = (unit==="kw") ? x : hpToKw(x);
+let kw=(unit.value=="hp")?p*0.746:p;
 
-  const I = (phase==="single")
-    ? (1000*kw)/(220*0.90*0.85)
-    : (1000*kw)/(1.732*380*0.85*0.90);
+let I=(ph==1)?
+(1000*kw)/(220*0.9*0.85):
+(1000*kw)/(1.732*380*0.85*0.9);
 
-  const eo = eocr(I);
-  const set = (I*1.10);
-  const mcx = mc(I);
-  const br = breaker(I, phase, start);
+I=parseFloat(I.toFixed(1));
 
-  const tgt = cableTarget(I);
-  const kiv = cableKIV(I);
-  const cv  = cableCV(I);
+// EOCR
+let eocr="";
+if(I<=22) eocr="GMP22";
+else if(I<=40) eocr="GMP40";
+else eocr="GMP60";
 
-  document.getElementById("out").innerHTML =
-    `정격전류: <b>${I.toFixed(1)}A</b><br><br>
-     EOCR: <a target="_blank" href="${naver('LS '+eo+' EOCR')}">${eo}</a><br>
-     EOCR 세팅: <b>${set.toFixed(1)}A</b><br><br>
-     MC: <a target="_blank" href="${naver('LS Metasol '+mcx)}">${mcx}</a><br>
-     차단기: <a target="_blank" href="${naver('LS ABN '+br.code+' MCCB')}">${br.text}</a><br><br>
-     전선 기준전류: <b>${tgt}A</b><br>
-     전선(KIV): <b>${kiv}</b><br>
-     전선(CV): <b>${cv}</b>`;
+let pole=(ph==1)?"-2P":"-3P";
+let eocrModel=eocr+pole;
+
+// MC
+let mcSteps=[9,12,18,22,32,40,50,65];
+let mc="";
+for(let s of mcSteps){
+ if(I<s){ mc="MC-"+s+"b"; break;}
+}
+
+// MCCB
+let at=Math.ceil((I*start.value)/5)*5;
+let af=(at<=30)?30:(at<=50)?50:100;
+let br=`ABN ${ph==1?"2P":"3P"} ${af}AF / ${at}AT`;
+
+// 전선 기준
+let base=Math.ceil(I*1.25);
+
+// KIV
+let kiv=(base<=24)?"2.5sq":
+(base<=32)?"4sq":
+(base<=41)?"6sq":"10sq";
+
+// CV
+let cv=(base<=27)?"2.5sq":
+(base<=36)?"4sq":
+(base<=47)?"6sq":"10sq";
+
+out.innerHTML=`
+정격전류 : <b>${I}A</b><br><br>
+
+EOCR : <a target=_blank href="${naver("LS "+eocrModel)}">${eocrModel}</a><br>
+EOCR 설정 : <b>${(I*1.1).toFixed(1)}A</b><br><br>
+
+MC : <a target=_blank href="${naver("LS Metasol "+mc)}">${mc}</a><br>
+
+차단기 : <a target=_blank href="${naver("LS "+br)}">${br}</a><br><br>
+
+전선(KIV) : <b>${kiv}</b><br>
+전선(CV) : <b>${cv}</b>
+`;
+
 }
 </script>
-
 </body>
 </html>
