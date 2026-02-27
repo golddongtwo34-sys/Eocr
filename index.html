@@ -1,150 +1,174 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LS 모터 선정 계산기 PRO</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NII 전기 계산기</title>
 
-<style>
-body{
- background:#0f172a;
- color:#e5e7eb;
- font-family:system-ui;
- padding:20px;
-}
-.card{
- background:#111827;
- padding:22px;
- border-radius:16px;
- max-width:520px;
- margin:auto;
- box-shadow:0 0 30px rgba(0,0,0,0.6);
-}
-h2{
- text-align:center;
- color:#38bdf8;
-}
-select,input,button{
- width:100%;
- padding:14px;
- margin:8px 0;
- border-radius:10px;
- border:none;
- font-size:16px;
-}
-button{
- background:#38bdf8;
- color:#000;
- font-weight:bold;
-}
-.result{
- margin-top:18px;
- line-height:1.8;
- font-size:17px;
-}
-a{color:#22c55e;text-decoration:none}
-b{color:#22c55e}
-</style>
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --panel:#0f1722;
+      --card:#111c2a;
+      --line:rgba(255,255,255,.08);
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.6);
+      --accent:#7dd3fc;
+      --accent2:#a78bfa;
+    }
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Noto Sans KR",sans-serif;
+    }
+    .app{
+      display:grid;
+      grid-template-columns:240px 1fr;
+      min-height:100vh;
+    }
+    .sidebar{
+      background:var(--panel);
+      padding:16px;
+      border-right:1px solid var(--line);
+    }
+    .logo{
+      font-weight:900;
+      letter-spacing:.25em;
+      margin-bottom:20px;
+    }
+    .book{
+      width:100%;
+      margin:8px 0;
+      padding:12px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:#111827;
+      color:#fff;
+      cursor:pointer;
+      text-align:left;
+      font-weight:700;
+    }
+    .book.active{
+      border-color:var(--accent);
+      background:#0f1b2d;
+    }
+    .main{
+      padding:20px;
+    }
+    .card{
+      max-width:520px;
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:18px;
+    }
+    label{
+      font-size:12px;
+      color:var(--muted);
+      display:block;
+      margin-top:10px;
+      margin-bottom:6px;
+    }
+    input,select{
+      width:100%;
+      padding:12px;
+      border-radius:10px;
+      border:1px solid var(--line);
+      background:#0b1220;
+      color:#fff;
+    }
+    button.calc{
+      width:100%;
+      margin-top:14px;
+      padding:12px;
+      border-radius:12px;
+      border:1px solid var(--accent);
+      background:linear-gradient(135deg,#7dd3fc33,#a78bfa33);
+      color:#fff;
+      font-weight:800;
+      cursor:pointer;
+    }
+    .result{
+      margin-top:16px;
+      font-size:22px;
+      font-weight:900;
+      text-align:right;
+    }
+    .tab{display:none;}
+    .tab.active{display:block;}
+  </style>
 </head>
-
 <body>
-<div class="card">
 
-<h2>LS 모터 선정 계산기 PRO</h2>
+<div class="app">
 
-<select id="phase">
-<option value="3">삼상</option>
-<option value="1">단상</option>
-</select>
+  <div class="sidebar">
+    <div class="logo">NII</div>
 
-<select id="unit">
-<option value="hp">HP</option>
-<option value="kw">kW</option>
-</select>
+    <button class="book active" onclick="openTab('breaker')">
+      차단기별 전선sq
+    </button>
+  </div>
 
-<input id="power" placeholder="용량 입력">
+  <div class="main">
 
-<select id="start">
-<option value="1.8">Y-Δ 기동</option>
-<option value="2.2">직입 기동</option>
-<option value="1.6">인버터</option>
-</select>
+    <div id="breaker" class="tab active">
+      <h2>차단기별 전선 SQ</h2>
 
-<button onclick="calc()">계산</button>
+      <div class="card">
+        <label>단상 / 삼상</label>
+        <select id="phase">
+          <option value="1">단상</option>
+          <option value="3">삼상</option>
+        </select>
 
-<div id="out" class="result"></div>
+        <label>차단기 AT</label>
+        <input type="number" id="at" placeholder="예: 100" />
 
+        <button class="calc" onclick="calcWire()">
+          전선 SQ 계산
+        </button>
+
+        <div class="result" id="result">—</div>
+      </div>
+    </div>
+
+  </div>
 </div>
 
 <script>
-
-function naver(q){
- return "https://search.naver.com/search.naver?query="+encodeURIComponent(q);
+function openTab(id){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  document.querySelectorAll(".book").forEach(b=>b.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  event.target.classList.add("active");
 }
 
-function calc(){
+function calcWire(){
+  const at = Number(document.getElementById("at").value);
+  let sq = "";
 
-let ph=phase.value;
-let p=parseFloat(power.value);
-if(!p) return;
+  if (at<=5) sq=0.75;
+  else if (at<=7) sq=1.25;
+  else if (at<=10) sq=1.5;
+  else if (at<=20) sq=2.5;
+  else if (at<=30) sq=4;
+  else if (at<=40) sq=6;
+  else if (at<=60) sq=10;
+  else if (at<=75) sq=16;
+  else if (at<=100) sq=25;
+  else if (at<=125) sq=35;
+  else if (at<=150) sq=50;
+  else if (at<=175) sq=70;
+  else if (at<=225) sq=95;
+  else if (at<=250) sq=120;
+  else sq=">120";
 
-let kw=(unit.value=="hp")?p*0.746:p;
-
-let I=(ph==1)?
-(1000*kw)/(220*0.9*0.85):
-(1000*kw)/(1.732*380*0.85*0.9);
-
-I=parseFloat(I.toFixed(1));
-
-// EOCR
-let eocr="";
-if(I<=22) eocr="GMP22";
-else if(I<=40) eocr="GMP40";
-else eocr="GMP60";
-
-let pole=(ph==1)?"-2P":"-3P";
-let eocrModel=eocr+pole;
-
-// MC
-let mcSteps=[9,12,18,22,32,40,50,65];
-let mc="";
-for(let s of mcSteps){
- if(I<s){ mc="MC-"+s+"b"; break;}
-}
-
-// MCCB
-let at=Math.ceil((I*start.value)/5)*5;
-let af=(at<=30)?30:(at<=50)?50:100;
-let br=`ABN ${ph==1?"2P":"3P"} ${af}AF / ${at}AT`;
-
-// 전선 기준
-let base=Math.ceil(I*1.25);
-
-// KIV
-let kiv=(base<=24)?"2.5sq":
-(base<=32)?"4sq":
-(base<=41)?"6sq":"10sq";
-
-// CV
-let cv=(base<=27)?"2.5sq":
-(base<=36)?"4sq":
-(base<=47)?"6sq":"10sq";
-
-out.innerHTML=`
-정격전류 : <b>${I}A</b><br><br>
-
-EOCR : <a target=_blank href="${naver("LS "+eocrModel)}">${eocrModel}</a><br>
-EOCR 설정 : <b>${(I*1.1).toFixed(1)}A</b><br><br>
-
-MC : <a target=_blank href="${naver("LS Metasol "+mc)}">${mc}</a><br>
-
-차단기 : <a target=_blank href="${naver("LS "+br)}">${br}</a><br><br>
-
-전선(KIV) : <b>${kiv}</b><br>
-전선(CV) : <b>${cv}</b>
-`;
-
+  document.getElementById("result").textContent =
+    (sq===">120") ? "> 120 sq" : sq + " sq";
 }
 </script>
+
 </body>
 </html>
