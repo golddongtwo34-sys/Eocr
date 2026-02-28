@@ -1,172 +1,484 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NII 전기 계산기</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NII 전기 계산기</title>
+<style>
+  :root{
+    --bg:#0b0f14;
+    --panel:#0f1722;
+    --card:#111c2a;
+    --line:rgba(255,255,255,.08);
+    --text:rgba(255,255,255,.92);
+    --muted:rgba(255,255,255,.62);
+    --accent:#7dd3fc;
+    --accent2:#a78bfa;
+    --ok:#b7ffcf;
+    --warn:#ffd6a1;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 900px at 18% 12%, rgba(167,139,250,.18), transparent 62%),
+      radial-gradient(1100px 900px at 75% 45%, rgba(125,211,252,.14), transparent 60%),
+      radial-gradient(800px 700px at 55% 5%, rgba(255,255,255,.05), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Noto Sans KR","Apple SD Gothic Neo","Segoe UI",Roboto,sans-serif;
+  }
 
-  <style>
-    :root{
-      --bg:#0b0f14;
-      --panel:#0f1722;
-      --card:#111c2a;
-      --line:rgba(255,255,255,.08);
-      --text:rgba(255,255,255,.92);
-      --muted:rgba(255,255,255,.6);
-      --accent:#7dd3fc;
-      --accent2:#a78bfa;
-    }
-    body{
-      margin:0;
-      background:var(--bg);
-      color:var(--text);
-      font-family:-apple-system,BlinkMacSystemFont,"Noto Sans KR",sans-serif;
-    }
-    .app{
-      display:grid;
-      grid-template-columns:240px 1fr;
-      min-height:100vh;
-    }
-    .sidebar{
-      background:var(--panel);
-      padding:16px;
-      border-right:1px solid var(--line);
-    }
-    .logo{
-      font-weight:900;
-      letter-spacing:.25em;
-      margin-bottom:20px;
-    }
-    .book{
-      width:100%;
-      margin:8px 0;
-      padding:12px;
-      border-radius:12px;
-      border:1px solid var(--line);
-      background:#111827;
-      color:#fff;
-      cursor:pointer;
-      text-align:left;
-      font-weight:700;
-    }
-    .book.active{
-      border-color:var(--accent);
-      background:#0f1b2d;
-    }
-    .main{
-      padding:20px;
-    }
-    .card{
-      max-width:520px;
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:18px;
-    }
-    label{
-      font-size:12px;
-      color:var(--muted);
-      display:block;
-      margin-top:10px;
-      margin-bottom:6px;
-    }
-    input,select{
-      width:100%;
-      padding:12px;
-      border-radius:10px;
-      border:1px solid var(--line);
-      background:#0b1220;
-      color:#fff;
-    }
-    button.calc{
-      width:100%;
-      margin-top:14px;
-      padding:12px;
-      border-radius:12px;
-      border:1px solid var(--accent);
-      background:linear-gradient(135deg,#7dd3fc33,#a78bfa33);
-      color:#fff;
-      font-weight:800;
-      cursor:pointer;
-    }
-    .result{
-      margin-top:16px;
-      font-size:22px;
-      font-weight:900;
-      text-align:right;
-    }
-    .tab{display:none;}
-    .tab.active{display:block;}
-  </style>
+  .app{min-height:100vh;display:grid;grid-template-columns: 288px 1fr;}
+
+  .sidebar{
+    padding:16px 14px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.04), transparent 45%),
+      linear-gradient(180deg, rgba(15,23,34,.98), rgba(15,23,34,.86)),
+      var(--panel);
+    border-right:1px solid var(--line);
+  }
+
+  /* 🔥 NII Brand */
+  .brand{
+    position:relative;
+    border-radius:20px;
+    padding:18px 14px 16px;
+    background:
+      linear-gradient(135deg, rgba(125,211,252,.20), rgba(167,139,250,.20)),
+      rgba(15,23,34,.94);
+    border:1px solid rgba(125,211,252,.38);
+    box-shadow: 0 14px 40px rgba(0,0,0,.45), inset 0 0 40px rgba(125,211,252,.10);
+    margin-bottom:16px;
+    overflow:hidden;
+  }
+  .brand::before{
+    content:"";
+    position:absolute;
+    inset:-60px -120px auto auto;
+    width:240px;
+    height:240px;
+    background:conic-gradient(from 180deg, rgba(125,211,252,0), rgba(125,211,252,.22), rgba(167,139,250,.18), rgba(125,211,252,0));
+    filter:blur(2px);
+    transform:rotate(18deg);
+    opacity:.85;
+  }
+  .brand::after{
+    content:"";
+    position:absolute; inset:0;
+    background:
+      radial-gradient(circle at 18% 22%, rgba(125,211,252,.28), transparent 45%),
+      radial-gradient(circle at 78% 80%, rgba(167,139,250,.28), transparent 45%),
+      linear-gradient(180deg, rgba(255,255,255,.06), transparent 35%);
+    pointer-events:none;
+  }
+  .logo{
+    font-weight:950;
+    letter-spacing:.36em;
+    font-size:28px;
+    margin:0;
+    background:linear-gradient(90deg,#7dd3fc,#a78bfa,#7dd3fc);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    text-shadow:0 0 20px rgba(125,211,252,.35);
+    position:relative; z-index:1;
+  }
+  .sub{
+    margin-top:8px;
+    font-size:11px;
+    color:var(--muted);
+    letter-spacing:.14em;
+    position:relative; z-index:1;
+  }
+  .brandline{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;position:relative;z-index:1;}
+  .pill{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:8px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.10);
+    background:rgba(10,14,20,.35);color:var(--muted);font-size:12px;line-height:1;
+  }
+  .dot{width:8px;height:8px;border-radius:50%;background:linear-gradient(180deg,var(--accent),var(--accent2));box-shadow:0 0 12px rgba(125,211,252,.35);}
+
+  /* Tabs */
+  .book{
+    width:100%;
+    margin:10px 0;
+    padding:14px 12px 14px 14px;
+    border-radius:16px;
+    border:1px solid var(--line);
+    background: linear-gradient(135deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+    color:var(--text);
+    cursor:pointer;
+    text-align:left;
+    font-weight:900;
+    position:relative;
+    box-shadow: 0 12px 30px rgba(0,0,0,.35);
+    transition: transform .12s ease, border-color .12s ease, background .12s ease;
+  }
+  .book::before{
+    content:"";
+    position:absolute;
+    left:10px; top:10px; bottom:10px;
+    width:4px;border-radius:999px;
+    background: linear-gradient(180deg, var(--accent), var(--accent2));
+    opacity:.75;
+  }
+  .book:hover{ transform: translateY(-1px); border-color: rgba(125,211,252,.35); }
+  .book.active{
+    border-color:rgba(125,211,252,.60);
+    background: linear-gradient(135deg, rgba(125,211,252,.16), rgba(167,139,250,.12));
+  }
+  .book .meta{display:block;margin-top:6px;font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.04em;}
+
+  .main{padding:22px 18px;}
+  .tab{display:none;}
+  .tab.active{display:block;}
+
+  .head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 0 14px;}
+  .head h2{margin:0;font-size:20px;letter-spacing:.02em;}
+  .badge{font-weight:950;letter-spacing:.22em;font-size:12px;padding:8px 10px;border-radius:999px;border:1px solid rgba(125,211,252,.38);background: linear-gradient(135deg, rgba(125,211,252,.10), rgba(167,139,250,.10));}
+
+  .card{
+    max-width: 980px;
+    background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:18px;
+    box-shadow: 0 18px 55px rgba(0,0,0,.40);
+  }
+
+  .grid{display:grid;grid-template-columns: 1fr 1fr;gap:12px;}
+  .field{display:flex;flex-direction:column;gap:8px;}
+  .wide{grid-column:1/-1;}
+
+  label{font-size:12px;color:var(--muted);letter-spacing:.06em;}
+  input,select,button{
+    width:100%;
+    padding:12px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,.10);
+    background: rgba(10,14,20,.55);
+    color:var(--text);
+    outline:none;
+    font-size:16px;
+  }
+  input:focus,select:focus{
+    border-color: rgba(125,211,252,.55);
+    box-shadow: 0 0 0 4px rgba(125,211,252,.10);
+  }
+  button.calc{
+    border:1px solid rgba(125,211,252,.40);
+    background: linear-gradient(135deg, rgba(125,211,252,.20), rgba(167,139,250,.14));
+    font-weight:950;
+    letter-spacing:.04em;
+    cursor:pointer;
+  }
+  button.calc:active{transform: translateY(1px);}
+
+  .kv{margin-top:14px;border-top:1px solid var(--line);padding-top:14px;font-size:16px;line-height:1.65;}
+  .small{font-size:12px;color:var(--muted);line-height:1.55;margin-top:10px;}
+  a{color: var(--accent);text-decoration:none;}
+  a:hover{text-decoration:underline;}
+
+  .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
+  .pill2{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:8px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.10);
+    background: rgba(10,14,20,.35);color:var(--muted);font-size:12px;
+  }
+  .pill2 b{color:var(--text)}
+  .ok{color:var(--ok)}
+  .warn{color:var(--warn)}
+</style>
 </head>
 <body>
 
 <div class="app">
-
-  <div class="sidebar">
-    <div class="logo">NII</div>
-
-    <button class="book active" onclick="openTab('breaker')">
-      차단기별 전선sq
-    </button>
-  </div>
-
-  <div class="main">
-
-    <div id="breaker" class="tab active">
-      <h2>차단기별 전선 SQ</h2>
-
-      <div class="card">
-        <label>단상 / 삼상</label>
-        <select id="phase">
-          <option value="1">단상</option>
-          <option value="3">삼상</option>
-        </select>
-
-        <label>차단기 AT</label>
-        <input type="number" id="at" placeholder="예: 100" />
-
-        <button class="calc" onclick="calcWire()">
-          전선 SQ 계산
-        </button>
-
-        <div class="result" id="result">—</div>
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">NII</div>
+      <div class="sub">NEW INTERNATIONAL INDUSTRY</div>
+      <div class="brandline">
+        <span class="pill"><span class="dot"></span> Field Tools</span>
+        <span class="pill"><span class="dot"></span> LS 기준</span>
       </div>
     </div>
 
-  </div>
+    <button class="book active" onclick="openTab('tab_breaker', this)">
+      차단기별 전선sq
+      <span class="meta">KIV 허용전류 표(모터탭과 동일)</span>
+    </button>
+
+    <button class="book" onclick="openTab('tab_motor', this)">
+      LS 모터 보호 계산기
+      <span class="meta">기존 로직 100% 동일</span>
+    </button>
+  </aside>
+
+  <main class="main">
+    <!-- ===== TAB 1: Breaker → Wire ===== -->
+    <section id="tab_breaker" class="tab active">
+      <div class="head">
+        <h2>차단기별 전선 SQ</h2>
+        <div class="badge">NII</div>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <span class="pill2"><span class="ok">●</span> 전선표: <b>모터탭 KIV 표와 동일</b></span>
+          <span class="pill2"><span class="warn">●</span> 규칙: <b>허용전류 &gt; 기준전류</b> 최소 SQ</span>
+        </div>
+
+        <div class="grid" style="margin-top:12px;">
+          <div class="field">
+            <label>단상 / 삼상 (표시용)</label>
+            <select id="b_phase">
+              <option value="1">단상</option>
+              <option value="3">삼상</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>차단기 AT (A)</label>
+            <input type="number" id="b_at" placeholder="예: 100" inputmode="numeric" />
+          </div>
+          <div class="field wide">
+            <button class="calc" onclick="calcBreakerWire()">전선 SQ 계산</button>
+          </div>
+        </div>
+
+        <div id="b_out" class="kv">—</div>
+
+        <div class="small">
+          기준전류는 기본값으로 <b>AT 그대로</b> 적용.<br/>
+          (원하면 나중에 “여유율(×1.25)” 토글도 추가 가능)
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== TAB 2: Motor calculator (original logic) ===== -->
+    <section id="tab_motor" class="tab">
+      <div class="head">
+        <h2>LS 모터 보호 계산기 (현장)</h2>
+        <div class="badge">NII</div>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <span class="pill2"><span class="ok">●</span> 결과값: <b>예전 프로그램과 동일</b></span>
+          <span class="pill2"><span class="warn">●</span> 링크: <b>네이버 검색</b> (인터넷 필요)</span>
+        </div>
+
+        <div class="grid" style="margin-top:12px;">
+          <div class="field">
+            <label>상</label>
+            <select id="phase">
+              <option value="three">삼상</option>
+              <option value="single">단상</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>단위</label>
+            <select id="unit">
+              <option value="hp">HP</option>
+              <option value="kw">kW</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>용량</label>
+            <input id="val" inputmode="decimal" placeholder="용량 입력 (예: 7.5)">
+          </div>
+
+          <div class="field">
+            <label>기동방식</label>
+            <select id="start">
+              <option value="star" selected>Y-Δ (기본)</option>
+              <option value="dol">직입</option>
+              <option value="inv">인버터</option>
+            </select>
+          </div>
+
+          <div class="field wide">
+            <button class="calc" onclick="calc()">계산</button>
+          </div>
+        </div>
+
+        <div id="out" class="kv"></div>
+
+        <div class="small">
+          전선 기준: <b>ceil(1.25×FLA)</b>를 기준전류로 잡고, “걸리면 한 단계 업” 규칙(허용전류가 기준보다 <b>큰</b> 최소 SQ) 적용.<br>
+          KIV(판넬 내부) / CV(출선 케이블) <b>둘 다</b> 추천값을 표시합니다.
+        </div>
+      </div>
+    </section>
+  </main>
 </div>
 
 <script>
-function openTab(id){
-  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-  document.querySelectorAll(".book").forEach(b=>b.classList.remove("active"));
+/* ===== Tabs ===== */
+function openTab(id, btn){
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".book").forEach(b => b.classList.remove("active"));
   document.getElementById(id).classList.add("active");
-  event.target.classList.add("active");
+  if (btn) btn.classList.add("active");
 }
 
-function calcWire(){
-  const at = Number(document.getElementById("at").value);
-  let sq = "";
+/* ✅ 공통: KIV 허용전류(보수) - 모터탭과 동일 표 */
+function cableKIV_byTarget(targetA){
+  const tbl=[
+    {sq:"1.5㎟", A:18},
+    {sq:"2.5㎟", A:24},
+    {sq:"4㎟",   A:32},
+    {sq:"6㎟",   A:41},
+    {sq:"10㎟",  A:57},
+    {sq:"16㎟",  A:76},
+    {sq:"25㎟",  A:101},
+    {sq:"35㎟",  A:125},
+    {sq:"50㎟",  A:151},
+    {sq:"70㎟",  A:192},
+    {sq:"95㎟",  A:232}
+  ];
+  for(const r of tbl){ if(r.A > targetA) return r.sq; }
+  return tbl[tbl.length-1].sq;
+}
 
-  if (at<=5) sq=0.75;
-  else if (at<=7) sq=1.25;
-  else if (at<=10) sq=1.5;
-  else if (at<=20) sq=2.5;
-  else if (at<=30) sq=4;
-  else if (at<=40) sq=6;
-  else if (at<=60) sq=10;
-  else if (at<=75) sq=16;
-  else if (at<=100) sq=25;
-  else if (at<=125) sq=35;
-  else if (at<=150) sq=50;
-  else if (at<=175) sq=70;
-  else if (at<=225) sq=95;
-  else if (at<=250) sq=120;
-  else sq=">120";
+/* ===== TAB1: breaker → wire (aligned) ===== */
+function calcBreakerWire(){
+  const at = Number(document.getElementById("b_at").value);
+  if(!isFinite(at) || at<=0){
+    document.getElementById("b_out").innerHTML = "값을 입력하세요.";
+    return;
+  }
+  const target = Math.ceil(at); // 기준전류 = AT
+  const kiv = cableKIV_byTarget(target);
+  document.getElementById("b_out").innerHTML =
+    `기준전류: <b>${target}A</b><br>전선(KIV): <b>${kiv}</b>`;
+}
 
-  document.getElementById("result").textContent =
-    (sq===">120") ? "> 120 sq" : sq + " sq";
+/* =========================
+   TAB2: Original motor logic (UNCHANGED)
+   ========================= */
+function naver(q){
+  return "https://search.naver.com/search.naver?query="+encodeURIComponent(q);
+}
+function hpToKw(hp){ return hp*0.7457; }
+
+// EOCR(간이)
+function eocr(I){
+  if(I<=22) return "GMP22-2P";
+  if(I<=40) return "GMP40-2P";
+  return "GMP60-3TZ";
+}
+
+// MC: 딱맞게 + 걸리면 1단계 업, b타입
+function mc(I){
+  const steps=[6,9,12,18,22,32,40,50,65,75,85,100,150,185,225];
+  for(let i=0;i<steps.length;i++){
+    const s=steps[i];
+    if(I < s) return "MC-"+s+"b";
+    if(I === s && i < steps.length-1) return "MC-"+steps[i+1]+"b";
+  }
+  return "대용량 MC(별도 선정)";
+}
+
+// 차단기(ABN): 기동방식 배수는 차단기 AT에만 적용
+function breaker(I, phase, startMode){
+  const mult={star:1.8,dol:2.2,inv:1.6}[startMode] ?? 1.8;
+  const at=Math.ceil((I*mult)/5)*5;
+
+  let af=(at<=30)?30:(at<=50)?50:(at<=100)?100:(at<=225)?225:(at<=400)?400:800;
+
+  let code;
+  if(phase==="single"){
+    code = (af===30)?"32c":(af===50)?"52c":(af===100)?"102c":(af===225)?"222c":(af===400)?"402c":"802c";
+  }else{
+    code = (af===30)?"33c":(af===50)?"53c":(af===100)?"103c":(af===225)?"223c":(af===400)?"403c":"803c";
+  }
+  const pole=(phase==="single")?"2P":"3P";
+  return {text:`ABN ${code} ${pole} ${af}AF/${at}AT`, code};
+}
+
+// 공통: 기준전류
+function cableTarget(I){ return Math.ceil(I*1.25); }
+
+// KIV 허용전류(보수) - 판넬 내부배선
+function cableKIV(I){
+  const target = cableTarget(I);
+  const tbl=[
+    {sq:"1.5㎟", A:18},
+    {sq:"2.5㎟", A:24},
+    {sq:"4㎟",   A:32},
+    {sq:"6㎟",   A:41},
+    {sq:"10㎟",  A:57},
+    {sq:"16㎟",  A:76},
+    {sq:"25㎟",  A:101},
+    {sq:"35㎟",  A:125},
+    {sq:"50㎟",  A:151},
+    {sq:"70㎟",  A:192},
+    {sq:"95㎟",  A:232}
+  ];
+  for(const r of tbl){ if(r.A > target) return r.sq; }
+  return tbl[tbl.length-1].sq;
+}
+
+// CV 허용전류(낙관~중간) - 출선 케이블(트레이/관로 일반 가정)
+function cableCV(I){
+  const target = cableTarget(I);
+  const tbl=[
+    {sq:"1.5㎟", A:20},
+    {sq:"2.5㎟", A:27},
+    {sq:"4㎟",   A:36},
+    {sq:"6㎟",   A:47},
+    {sq:"10㎟",  A:65},
+    {sq:"16㎟",  A:85},
+    {sq:"25㎟",  A:110},
+    {sq:"35㎟",  A:135},
+    {sq:"50㎟",  A:165},
+    {sq:"70㎟",  A:210},
+    {sq:"95㎟",  A:255}
+  ];
+  for(const r of tbl){ if(r.A > target) return r.sq; }
+  return tbl[tbl.length-1].sq;
+}
+
+function calc(){
+  const phase = document.getElementById("phase").value;
+  const unit  = document.getElementById("unit").value;
+  const start = document.getElementById("start").value;
+
+  const raw = String(document.getElementById("val").value||"").replace(",", ".");
+  const x = Number(raw);
+  if(!x || x<=0){
+    document.getElementById("out").innerHTML = "값을 입력하세요.";
+    return;
+  }
+
+  const kw = (unit==="kw") ? x : hpToKw(x);
+
+  const I = (phase==="single")
+    ? (1000*kw)/(220*0.90*0.85)
+    : (1000*kw)/(1.732*380*0.85*0.90);
+
+  const eo = eocr(I);
+  const set = (I*1.10);
+  const mcx = mc(I);
+  const br = breaker(I, phase, start);
+
+  const tgt = cableTarget(I);
+  const kiv = cableKIV(I);
+  const cv  = cableCV(I);
+
+  document.getElementById("out").innerHTML =
+    `정격전류: <b>${I.toFixed(1)}A</b><br><br>
+     EOCR: <a target="_blank" href="${naver('LS '+eo+' EOCR')}">${eo}</a><br>
+     EOCR 세팅: <b>${set.toFixed(1)}A</b><br><br>
+     MC: <a target="_blank" href="${naver('LS Metasol '+mcx)}">${mcx}</a><br>
+     차단기: <a target="_blank" href="${naver('LS ABN '+br.code+' MCCB')}">${br.text}</a><br><br>
+     전선 기준전류: <b>${tgt}A</b><br>
+     전선(KIV): <b>${kiv}</b><br>
+     전선(CV): <b>${cv}</b>`;
 }
 </script>
 
