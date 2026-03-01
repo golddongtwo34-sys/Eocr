@@ -916,50 +916,6 @@ function calcGround(){
   out.innerHTML = '접지 BUSBAR 필요 단면적<br><b style="font-size:28px">' + final + ' mm²</b>';
 }
 
-if(!isFinite(at) || at<=0){
-    out.innerHTML = "값을 입력하세요.";
-    return;
-  }
-
-  const Ib = Math.ceil(at * 0.8);
-
-  const tbl=[
-    {sq:1.5, A:18},
-    {sq:2.5, A:24},
-    {sq:4,   A:32},
-    {sq:6,   A:41},
-    {sq:10,  A:57},
-    {sq:16,  A:76},
-    {sq:25,  A:101},
-    {sq:35,  A:125},
-    {sq:50,  A:151},
-    {sq:70,  A:192},
-    {sq:95,  A:232},
-    {sq:120, A:269},
-    {sq:150, A:309},
-    {sq:185, A:353},
-    {sq:240, A:415}
-  ];
-
-  let S = tbl[tbl.length-1].sq;
-  for(const r of tbl){
-    if(r.A >= Ib){ S = r.sq; break; }
-  }
-
-  let Spe;
-  if(S <= 16) Spe = S;
-  else if(S <= 35) Spe = 16;
-  else Spe = S/2;
-
-  const std=[6,10,16,25,35,50,70,95,120,150,185,240];
-  let final=std[std.length-1];
-  for(const s of std){
-    if(s >= Spe){ final=s; break; }
-  }
-
-  out.innerHTML =
-    '접지 BUSBAR 필요 단면적<br><b style="font-size:28px">' + final + ' mm²</b>';
-}
 
 
 /* ===== Criteria modal ===== */
@@ -1148,6 +1104,17 @@ function calcBreaker(){
     <button class="navBtn" onclick="openTab('tab_breaker_calc', this)">차단기</button>
   </div>
 </nav>
+
+
+<!-- ✅ Criteria Modal -->
+<div id="criteriaOverlay" class="modalOverlay" onclick="closeCriteria(event)"></div>
+<div id="criteriaModal" class="modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="criteriaTitle">
+  <div class="modalHead">
+    <div id="criteriaTitle" class="modalTitle">적용기준</div>
+    <button class="modalClose" onclick="hideCriteria()">닫기</button>
+  </div>
+  <div id="criteriaBody" class="modalBody"></div>
+</div>
 
 </body>
 </html>
