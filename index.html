@@ -311,6 +311,153 @@
   z-index:9999;
 }
 
+
+/* ===== UI ENHANCEMENT PACK ===== */
+:root{
+  --accent:#7dd3fc;
+  --accent2:#a78bfa;
+}
+
+.card{
+  box-shadow:0 10px 30px rgba(0,0,0,.35);
+  border:1px solid rgba(255,255,255,.06);
+}
+
+.calc{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border:none;
+  font-weight:900;
+  letter-spacing:.02em;
+  box-shadow:0 8px 22px rgba(0,0,0,.35);
+}
+
+.calc:active{
+  transform:scale(.98);
+}
+
+.kv b{
+  font-size:28px;
+  letter-spacing:.02em;
+}
+
+.small{
+  opacity:.75;
+  font-size:12px;
+  line-height:1.4;
+  margin-top:10px;
+}
+
+.head h2{
+  letter-spacing:.02em;
+}
+
+.bottomTabs{
+  backdrop-filter: blur(14px);
+  background:linear-gradient(180deg, rgba(15,17,21,.55), rgba(15,17,21,.92));
+}
+
+.navBtn{
+  transition:.15s ease;
+}
+
+.navBtn:active{
+  transform:scale(.96);
+}
+
+
+/* ===== Criteria Button + Modal ===== */
+.actionRow{
+  display:flex;
+  gap:10px;
+  align-items:stretch;
+}
+.ghost{
+  flex:0 0 auto;
+  padding:12px 14px;
+  border-radius:14px;
+  font-size:13px;
+  font-weight:900;
+  letter-spacing:.02em;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.04);
+  color:rgba(255,255,255,.9);
+  cursor:pointer;
+}
+.ghost:active{ transform:scale(.98); }
+
+/* Modal */
+.modalOverlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:10000;
+  background:rgba(0,0,0,.55);
+  backdrop-filter: blur(10px);
+}
+.modalOverlay.show{ display:block; }
+.modal{
+  position:fixed;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  width:min(720px, calc(100vw - 28px));
+  max-height: min(80vh, 720px);
+  overflow:auto;
+  z-index:10001;
+  border-radius:18px;
+  background:rgba(20,22,28,.98);
+  border:1px solid rgba(255,255,255,.10);
+  box-shadow:0 18px 60px rgba(0,0,0,.55);
+}
+.modalHead{
+  position:sticky;
+  top:0;
+  z-index:2;
+  padding:14px 16px;
+  background:linear-gradient(180deg, rgba(20,22,28,.98), rgba(20,22,28,.75));
+  border-bottom:1px solid rgba(255,255,255,.08);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.modalTitle{
+  font-size:14px;
+  font-weight:950;
+  letter-spacing:.02em;
+}
+.modalClose{
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.06);
+  color:#fff;
+  border-radius:12px;
+  padding:10px 12px;
+  font-weight:900;
+  cursor:pointer;
+}
+.modalBody{
+  padding:14px 16px 18px;
+  font-size:13px;
+  line-height:1.55;
+  color:rgba(255,255,255,.92);
+}
+.modalBody .k{
+  color:rgba(255,255,255,.70);
+  font-weight:800;
+}
+.modalBody ul{ margin:10px 0 0 18px; }
+.modalBody li{ margin:6px 0; }
+
+/* Bottom tabs reliability */
+.bottomTabs{
+  display:block !important;
+  position:fixed;
+  left:0; right:0;
+  bottom:0;
+  z-index:9999;
+}
+.main{ padding-bottom: 110px !important; }
+
 </style>
 </head>
 <body>
@@ -364,12 +511,18 @@
             <label>차단기 AT (A)</label>
             <input type="number" id="b_at" placeholder="예: 100" inputmode="numeric" />
           </div>
-          <div class="field wide">
+          <div class="field wide actionRow">
             <button class="calc" onclick="calcBreakerWire()">전선 SQ 계산</button>
+            <button class="ghost" onclick="showCriteria('wire')">적용기준</button>
           </div>
         </div>
 
         <div id="b_out" class="kv">—</div>
+
+<div class="small">
+※ 분전반 내부 KIV 기준 간이 산정<br>
+※ 장거리/CV 케이블 회로는 별도 검토
+</div>
 
         <div class="small">※ 기준전류 = 0.8 × 차단기 AT (실부하 가정)</div>
 
@@ -424,8 +577,9 @@
             </select>
           </div>
 
-          <div class="field wide">
+          <div class="field wide actionRow">
             <button class="calc" onclick="calc()">계산</button>
+            <button class="ghost" onclick="showCriteria('motor')">적용기준</button>
           </div>
         </div>
 
@@ -467,7 +621,66 @@
 
         <div class="small">
           ※ 버스바 최소 기계강도는 제작 기준에 따라 별도 검토
+
+<div class="small">
+※ 일반 분전반 기준 간이 산정<br>
+※ 고단락 설비는 단열식 검토 권장
+</div>
+
         </div>
+      </div>
+    </section>
+
+  
+    <!-- ===== TAB: Breaker Selection ===== -->
+    <section id="tab_breaker_calc" class="tab">
+      <div class="head">
+        <h2>차단기 선정</h2>
+      </div>
+
+      <div class="card">
+
+        <div class="grid">
+          <div class="field">
+            <label>입력 방식</label>
+            <select id="br_mode" onchange="updateBreakerMode()">
+              <option value="A">전류(A)</option>
+              <option value="kW">kW</option>
+              <option value="HP">HP</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>값 입력</label>
+            <input type="number" id="br_value" placeholder="값 입력" />
+          </div>
+
+          <div class="field">
+            <label>전압(V)</label>
+            <select id="br_voltage">
+              <option value="220">220</option>
+              <option value="380" selected>380</option>
+              <option value="440">440</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>부하 종류</label>
+            <select id="br_load">
+              <option value="general">일반부하</option>
+              <option value="motor">모터부하</option>
+              <option value="heater">저항부하</option>
+            </select>
+          </div>
+
+          <div class="field wide actionRow">
+            <button class="calc" onclick="calcBreaker()">차단기 계산</button>
+            <button class="ghost" onclick="showCriteria('breaker')">적용기준</button>
+          </div>
+        </div>
+
+        <div id="br_out" class="kv">—</div>
+
       </div>
     </section>
 
@@ -646,6 +859,283 @@ function calc(){
      전선(KIV): <b>${kiv}</b><br>
      전선(CV): <b>${cv}</b>`;
 }
+
+
+function calcGround(){
+  const el = document.getElementById("g_at");
+  const out = document.getElementById("g_out");
+  if(!el || !out){
+    console.error("ground elements missing");
+    return;
+  }
+  const at = Number(el.value);
+  if(!isFinite(at) || at<=0){
+    out.innerHTML = "값을 입력하세요.";
+    return;
+  }
+
+  const Ib = Math.ceil(at * 0.8);
+
+  // KIV (분전반 내부) 허용전류표 (실무 보수값)
+  const tbl=[
+    {sq:1.5, A:18},
+    {sq:2.5, A:24},
+    {sq:4,   A:32},
+    {sq:6,   A:41},
+    {sq:10,  A:57},
+    {sq:16,  A:76},
+    {sq:25,  A:101},
+    {sq:35,  A:125},
+    {sq:50,  A:151},
+    {sq:70,  A:192},
+    {sq:95,  A:232},
+    {sq:120, A:269},
+    {sq:150, A:309},
+    {sq:185, A:353},
+    {sq:240, A:415}
+  ];
+
+  let S = tbl[tbl.length-1].sq;
+  for(const r of tbl){
+    if(r.A >= Ib){ S = r.sq; break; }
+  }
+
+  // KEC 간이법 (보호도체 단면적)
+  let Spe;
+  if(S <= 16) Spe = S;
+  else if(S <= 35) Spe = 16;
+  else Spe = S/2;
+
+  // 표준 단면적으로 올림(실제 유통 규격)
+  const std=[6,10,16,25,35,50,70,95,120,150,185,240];
+  let final=std[std.length-1];
+  for(const s of std){
+    if(s >= Spe){ final=s; break; }
+  }
+
+  out.innerHTML = '접지 BUSBAR 필요 단면적<br><b style="font-size:28px">' + final + ' mm²</b>';
+}
+
+if(!isFinite(at) || at<=0){
+    out.innerHTML = "값을 입력하세요.";
+    return;
+  }
+
+  const Ib = Math.ceil(at * 0.8);
+
+  const tbl=[
+    {sq:1.5, A:18},
+    {sq:2.5, A:24},
+    {sq:4,   A:32},
+    {sq:6,   A:41},
+    {sq:10,  A:57},
+    {sq:16,  A:76},
+    {sq:25,  A:101},
+    {sq:35,  A:125},
+    {sq:50,  A:151},
+    {sq:70,  A:192},
+    {sq:95,  A:232},
+    {sq:120, A:269},
+    {sq:150, A:309},
+    {sq:185, A:353},
+    {sq:240, A:415}
+  ];
+
+  let S = tbl[tbl.length-1].sq;
+  for(const r of tbl){
+    if(r.A >= Ib){ S = r.sq; break; }
+  }
+
+  let Spe;
+  if(S <= 16) Spe = S;
+  else if(S <= 35) Spe = 16;
+  else Spe = S/2;
+
+  const std=[6,10,16,25,35,50,70,95,120,150,185,240];
+  let final=std[std.length-1];
+  for(const s of std){
+    if(s >= Spe){ final=s; break; }
+  }
+
+  out.innerHTML =
+    '접지 BUSBAR 필요 단면적<br><b style="font-size:28px">' + final + ' mm²</b>';
+}
+
+
+/* ===== Criteria modal ===== */
+const CRITERIA = {
+  wire: {
+    title: "전선 SQ 탭 적용기준",
+    body: `
+      <div class="k">적용 범위</div>
+      <ul>
+        <li>분전반 내부 배선(KIV) 기준 간이 산정</li>
+        <li>장거리 배선/전압강하/외부 포설 조건은 미포함</li>
+      </ul>
+
+      <div class="k" style="margin-top:12px;">계산 기준</div>
+      <ul>
+        <li>기준전류: <b>0.8 × 차단기 AT</b> (실부하 가정)</li>
+        <li>전선 선정: 허용전류 ≥ 기준전류 만족하는 <b>최소 SQ</b></li>
+        <li>허용전류표: <b>KIV(분전반 내부) 실무 보수값</b></li>
+      </ul>
+
+      <div class="k" style="margin-top:12px;">주의</div>
+      <ul>
+        <li>CV 케이블/장거리/다심·집합·고온 환경은 별도 검토</li>
+      </ul>
+    `
+  },
+  motor: {
+    title: "모터 보호 탭 적용기준",
+    body: `
+      <div class="k">적용 범위</div>
+      <ul>
+        <li>모터 부하용량 기반 보호협조(분전반/제어반 실무)</li>
+      </ul>
+
+      <div class="k" style="margin-top:12px;">계산 기준</div>
+      <ul>
+        <li>모터 정격전류(FLA) 기반으로 보호기기 선정</li>
+        <li>전선 기준: <b>1.25 × FLA</b> (실무 기본)</li>
+        <li>EOCR/MC/차단기는 LS 실무 흐름에 맞춰 추천</li>
+      </ul>
+
+      <div class="k" style="margin-top:12px;">주의</div>
+      <ul>
+        <li>인버터(VFD) 구동/특수부하/고주파·고조파는 별도 검토</li>
+      </ul>
+    `
+  },
+  ground: {
+    title: "접지 BUSBAR 탭 적용기준",
+    body: `
+      <div class="k">적용 범위</div>
+      <ul>
+        <li>분전반 내부 <b>접지 BUSBAR 단면적(mm²)</b> 간이 산정</li>
+      </ul>
+
+      <div class="k" style="margin-top:12px;">계산 기준</div>
+      <ul>
+        <li>기준전류: <b>0.8 × 차단기 AT</b> (실부하 가정)</li>
+        <li>KIV 허용전류표로 상도체 단면적을 간이 환산</li>
+        <li>KEC 간이법(PE 단면적): S≤16 → PE=S / 16&lt;S≤35 → PE=16 / S&gt;35 → PE=S/2</li>
+        <li>출력은 <b>표준 단면적(mm²)</b>로 올림</li>
+      </ul>
+
+      <div class="k" style="margin-top:12px;">주의</div>
+      <ul>
+        <li>버스바 최소 기계강도(예: 3×15 등)는 제작 기준에 따라 별도 적용</li>
+        <li>고단락 설비는 단열식(adiabatic) 검토 권장</li>
+      </ul>
+    `
+  }
+,
+  breaker: {
+    title: "차단기 탭 적용기준",
+    body: `
+      <div class="k">적용 범위</div>
+      <ul>
+        <li>일반 부하용 MCCB 간이 선정</li>
+      </ul>
+      <div class="k" style="margin-top:12px;">전류 환산</div>
+      <ul>
+        <li>A 입력: Ib = 입력값</li>
+        <li>kW 입력: Ib = P/(√3×V×η×pf)</li>
+        <li>HP 입력: kW=HP×0.746 후 동일식 적용</li>
+      </ul>
+      <div class="k" style="margin-top:12px;">기본값</div>
+      <ul>
+        <li>역률: 일반 0.9 / 모터 0.85 / 저항 1.0</li>
+        <li>효율 η = 0.9</li>
+      </ul>
+      <div class="k" style="margin-top:12px;">차단기 선정</div>
+      <ul>
+        <li>필요정격 = 1.2 × Ib</li>
+        <li>LS 표준 AT 중 이상 최소값 선택</li>
+      </ul>
+    `
+  }
+};
+
+function showCriteria(key){
+  const c = CRITERIA[key];
+  if(!c) return;
+  document.getElementById("criteriaTitle").textContent = c.title;
+  document.getElementById("criteriaBody").innerHTML = c.body;
+  document.getElementById("criteriaOverlay").classList.add("show");
+  const modal = document.getElementById("criteriaModal");
+  modal.style.display = "block";
+}
+
+function hideCriteria(){
+  document.getElementById("criteriaOverlay").classList.remove("show");
+  document.getElementById("criteriaModal").style.display = "none";
+}
+
+function closeCriteria(e){
+  // only close when clicking the overlay itself
+  if(e && e.target && e.target.id === "criteriaOverlay") hideCriteria();
+}
+
+// ESC close
+document.addEventListener("keydown", (e)=>{
+  if(e.key === "Escape") hideCriteria();
+});
+
+
+/* ===== Breaker calc ===== */
+function updateBreakerMode(){
+  // currently simple (pf auto internally)
+}
+
+function calcBreaker(){
+  const mode = document.getElementById("br_mode").value;
+  const val = Number(document.getElementById("br_value").value);
+  const V = Number(document.getElementById("br_voltage").value);
+  const load = document.getElementById("br_load").value;
+  const out = document.getElementById("br_out");
+
+  if(!isFinite(val) || val<=0){
+    out.innerHTML = "값을 입력하세요.";
+    return;
+  }
+
+  // default pf by load
+  let pf = 0.9;
+  if(load==="motor") pf = 0.85;
+  if(load==="heater") pf = 1.0;
+
+  const eta = 0.9;
+
+  let Ib;
+
+  if(mode==="A"){
+    Ib = val;
+  } else {
+    let kW;
+    if(mode==="kW"){
+      kW = val;
+    } else {
+      kW = val * 0.746;
+    }
+    Ib = (kW*1000)/(Math.sqrt(3)*V*eta*pf);
+  }
+
+  const Ireq = Ib * 1.2;
+
+  const LS_AT = [15,20,30,40,50,60,75,100,125,150,175,200,225,250,300,350,400,500,600,630,800,1000];
+  let rec = LS_AT[LS_AT.length-1];
+  for(const a of LS_AT){
+    if(a >= Ireq){ rec = a; break; }
+  }
+
+  out.innerHTML =
+    '추천 차단기<br><b style="font-size:28px">'+rec+' AT</b><br>' +
+    '<div class="small">부하전류(Ib): '+Ib.toFixed(1)+' A<br>' +
+    '필요 최소정격: '+Ireq.toFixed(1)+' A</div>';
+}
+
 </script>
 
 
@@ -655,6 +1145,7 @@ function calc(){
     <button class="navBtn active" onclick="openTab('tab_breaker', this)">전선 SQ</button>
     <button class="navBtn" onclick="openTab('tab_motor', this)">모터 보호</button>
     <button class="navBtn" onclick="openTab('tab_ground', this)">접지</button>
+    <button class="navBtn" onclick="openTab('tab_breaker_calc', this)">차단기</button>
   </div>
 </nav>
 
