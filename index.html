@@ -131,7 +131,7 @@
   }
   .book .meta{display:block;margin-top:6px;font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.04em;}
 
-  .main{padding:22px 18px;}
+  .main{ padding-bottom:100px; padding:22px 18px;}
   .tab{display:none;}
   .tab.active{display:block;}
 
@@ -214,21 +214,21 @@
   .sidebar{ display:none; }
   .topTabs{ display:none; }
   .bottomTabs{ display:block; }
-  .main{ padding-top: 6px; padding-bottom: 92px; }
+  .main{ padding-bottom:100px;  padding-top: 6px; padding-bottom: 92px; }
 }
 .sidebar{ display:none; }
   .topTabs{ display:none; }
   .bottomTabs{ display:block; }
-  .main{ padding-top: 6px; padding-bottom: 92px; }
+  .main{ padding-bottom:100px;  padding-top: 6px; padding-bottom: 92px; }
 }
 .sidebar{ display:none; }
   .topTabs{ display:none; }      /* 상단탭 숨김 */
   .bottomTabs{ display:block; }  /* 하단탭 표시 */
-  .main{ padding-top: 6px; padding-bottom: 92px; } /* 하단탭 공간 */
+  .main{ padding-bottom:100px;  padding-top: 6px; padding-bottom: 92px; } /* 하단탭 공간 */
 }
 .sidebar{ display:none; }
   .topTabs{ display:flex; }
-  .main{ padding-top: 6px; }
+  .main{ padding-bottom:100px;  padding-top: 6px; }
 }
 .sidebar{ display:none; }
   .topTabs{ display:flex; }
@@ -299,6 +299,16 @@
 .bottomTabs .wrap{
   display:flex;
   gap:10px;
+}
+
+
+/* 🔧 Force bottom tabs visible */
+.bottomTabs{
+  display:block !important;
+  position:fixed;
+  left:0; right:0;
+  bottom:0;
+  z-index:9999;
 }
 
 </style>
