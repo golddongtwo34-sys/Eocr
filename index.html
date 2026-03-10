@@ -4,24 +4,26 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>기성 Busbar 검색</title>
+<title>Busbar DB 편집기</title>
 <style>
-body{font-family:-apple-system;background:#0d1117;color:#fff;margin:0;padding:20px}
+body{font-family:-apple-system;background:#0b0f14;color:#fff;padding:20px}
 .wrap{max-width:900px;margin:auto}
-.card{background:#161b22;padding:20px;border-radius:14px}
-select{width:100%;padding:12px;margin-top:6px;margin-bottom:14px;border-radius:10px;border:1px solid #333;background:#111;color:#fff}
-.result{background:#111;padding:15px;border-radius:12px;margin-top:10px}
-.row{margin:6px 0}
-.label{opacity:.7}
-h2{margin-top:0}
+.card{background:#121821;padding:20px;border-radius:14px;margin-bottom:16px}
+select,input,textarea,button{
+width:100%;padding:10px;margin:6px 0;border-radius:8px;
+background:#0d1117;color:#fff;border:1px solid #333;font-size:16px
+}
+button{cursor:pointer;background:#1f6feb;border:none}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 </style>
 </head>
 <body>
 <div class="wrap">
-<h2>기성 Busbar</h2>
+
+<h2>Busbar DB 편집</h2>
 
 <div class="card">
-<label>메인 차단기</label>
+<label>메인</label>
 <select id="main"></select>
 
 <label>분기</label>
@@ -35,81 +37,113 @@ h2{margin-top:0}
 
 <label>타입</label>
 <select id="type"></select>
-
-<div class="result">
-<div class="row"><span class="label">타공:</span> <span id="hole"></span></div>
-<div class="row"><span class="label">길이:</span> <span id="length"></span></div>
-<div class="row"><span class="label">금형:</span> <span id="mold"></span></div>
-<div class="row"><span class="label">메모:</span> <span id="memo"></span></div>
 </div>
 
+<div class="card">
+<h3>데이터 편집</h3>
+
+<div class="row">
+<div>
+<label>타공</label>
+<input id="hole">
 </div>
+
+<div>
+<label>길이</label>
+<input id="len">
+</div>
+</div>
+
+<label>금형</label>
+<input id="mold">
+
+<label>메모</label>
+<textarea id="memo"></textarea>
+
+<button onclick="save()">저장 (DB 갱신)</button>
+</div>
+
+<div class="card">
+<button onclick="download()">JSON 다운로드</button>
+</div>
+
 </div>
 
 <script>
 let DB={}
 
-function el(i){return document.getElementById(i)}
+const main=document.getElementById("main")
+const branch=document.getElementById("branch")
+const line=document.getElementById("line")
+const type=document.getElementById("type")
 
-function fill(select,list){
-select.innerHTML=""
+const hole=document.getElementById("hole")
+const len=document.getElementById("len")
+const mold=document.getElementById("mold")
+const memo=document.getElementById("memo")
+
+function fill(el,list){
+el.innerHTML=""
 list.forEach(v=>{
 let o=document.createElement("option")
 o.value=v
 o.textContent=v
-select.appendChild(o)
+el.appendChild(o)
 })
 }
 
-function init(){
-fill(el("main"),Object.keys(DB))
-updateMain()
-}
-
 function updateMain(){
-let m=el("main").value
-fill(el("branch"),Object.keys(DB[m]||{}))
+fill(branch,Object.keys(DB[main.value]||{}))
 updateLine()
 }
 
 function updateLine(){
-let m=el("main").value
-let b=el("branch").value
-let line=el("line").value
-
-let types=[]
-if(DB[m] && DB[m][b] && DB[m][b][line]){
-types=Object.keys(DB[m][b][line])
+let types = DB?.[main.value]?.[branch.value]?.[line.value]
+? Object.keys(DB[main.value][branch.value][line.value]) : []
+fill(type,types)
+load()
 }
 
-fill(el("type"),types)
-search()
+function load(){
+let r = DB?.[main.value]?.[branch.value]?.[line.value]?.[type.value] || {}
+hole.value=r["타공"]||""
+len.value=r["길이"]||""
+mold.value=r["금형"]||""
+memo.value=r["메모"]||""
 }
 
-function search(){
-let m=el("main").value
-let b=el("branch").value
-let line=el("line").value
-let t=el("type").value
+function save(){
+if(!DB?.[main.value]?.[branch.value]?.[line.value]?.[type.value]) return
 
-let r = DB?.[m]?.[b]?.[line]?.[t] || {}
-
-el("hole").textContent=r["타공"]||""
-el("length").textContent=r["길이"]||""
-el("mold").textContent=r["금형"]||""
-el("memo").textContent=r["메모"]||""
+DB[main.value][branch.value][line.value][type.value]={
+"타공":hole.value,
+"길이":len.value,
+"금형":mold.value,
+"메모":memo.value
 }
 
-el("main").onchange=updateMain
-el("branch").onchange=updateLine
-el("line").onchange=updateLine
-el("type").onchange=search
+alert("저장됨 (JSON 다운로드해서 업로드하세요)")
+}
+
+function download(){
+let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(DB,null,2))
+let a = document.createElement("a")
+a.href=dataStr
+a.download="busbarDB.json"
+a.click()
+}
+
+main.onchange=updateMain
+branch.onchange=updateLine
+line.onchange=updateLine
+type.onchange=load
 
 fetch("busbarDB.json")
 .then(r=>r.json())
 .then(d=>{
 DB=d
-init()
+fill(main,Object.keys(DB))
+updateMain()
 })
 </script>
 
