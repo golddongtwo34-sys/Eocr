@@ -4,26 +4,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Busbar DB 편집기</title>
+<title>기성 Busbar</title>
 <style>
 body{font-family:-apple-system;background:#0b0f14;color:#fff;padding:20px}
 .wrap{max-width:900px;margin:auto}
-.card{background:#121821;padding:20px;border-radius:14px;margin-bottom:16px}
-select,input,textarea,button{
-width:100%;padding:10px;margin:6px 0;border-radius:8px;
-background:#0d1117;color:#fff;border:1px solid #333;font-size:16px
-}
-button{cursor:pointer;background:#1f6feb;border:none}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.card{background:#121821;padding:20px;border-radius:14px}
+select{width:100%;padding:12px;margin:8px 0;border-radius:10px;background:#0d1117;color:#fff;border:1px solid #333}
+.result{background:#0d1117;padding:15px;border-radius:12px;margin-top:10px}
 </style>
 </head>
 <body>
 <div class="wrap">
-
-<h2>Busbar DB 편집</h2>
-
+<h2>기성 Busbar</h2>
 <div class="card">
-<label>메인</label>
+
+<label>메인 차단기</label>
 <select id="main"></select>
 
 <label>분기</label>
@@ -37,50 +32,19 @@ button{cursor:pointer;background:#1f6feb;border:none}
 
 <label>타입</label>
 <select id="type"></select>
+
+<div class="result">
+<div>타공: <span id="hole"></span></div>
+<div>길이: <span id="len"></span></div>
+<div>금형: <span id="mold"></span></div>
+<div>메모: <span id="memo"></span></div>
 </div>
 
-<div class="card">
-<h3>데이터 편집</h3>
-
-<div class="row">
-<div>
-<label>타공</label>
-<input id="hole">
 </div>
-
-<div>
-<label>길이</label>
-<input id="len">
-</div>
-</div>
-
-<label>금형</label>
-<input id="mold">
-
-<label>메모</label>
-<textarea id="memo"></textarea>
-
-<button onclick="save()">저장 (DB 갱신)</button>
-</div>
-
-<div class="card">
-<button onclick="download()">JSON 다운로드</button>
-</div>
-
 </div>
 
 <script>
 let DB={}
-
-const main=document.getElementById("main")
-const branch=document.getElementById("branch")
-const line=document.getElementById("line")
-const type=document.getElementById("type")
-
-const hole=document.getElementById("hole")
-const len=document.getElementById("len")
-const mold=document.getElementById("mold")
-const memo=document.getElementById("memo")
 
 function fill(el,list){
 el.innerHTML=""
@@ -93,50 +57,45 @@ el.appendChild(o)
 }
 
 function updateMain(){
-fill(branch,Object.keys(DB[main.value]||{}))
+let m=main.value
+fill(branch,Object.keys(DB[m]||{}))
 updateLine()
 }
 
 function updateLine(){
-let types = DB?.[main.value]?.[branch.value]?.[line.value]
-? Object.keys(DB[main.value][branch.value][line.value]) : []
+let m=main.value
+let b=branch.value
+let l=line.value
+let types = DB?.[m]?.[b]?.[l] ? Object.keys(DB[m][b][l]) : []
 fill(type,types)
-load()
+search()
 }
 
-function load(){
-let r = DB?.[main.value]?.[branch.value]?.[line.value]?.[type.value] || {}
-hole.value=r["타공"]||""
-len.value=r["길이"]||""
-mold.value=r["금형"]||""
-memo.value=r["메모"]||""
+function search(){
+let m=main.value
+let b=branch.value
+let l=line.value
+let t=type.value
+let r = DB?.[m]?.[b]?.[l]?.[t] || {}
+hole.textContent=r["타공"]||""
+len.textContent=r["길이"]||""
+mold.textContent=r["금형"]||""
+memo.textContent=r["메모"]||""
 }
 
-function save(){
-if(!DB?.[main.value]?.[branch.value]?.[line.value]?.[type.value]) return
-
-DB[main.value][branch.value][line.value][type.value]={
-"타공":hole.value,
-"길이":len.value,
-"금형":mold.value,
-"메모":memo.value
-}
-
-alert("저장됨 (JSON 다운로드해서 업로드하세요)")
-}
-
-function download(){
-let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(DB,null,2))
-let a = document.createElement("a")
-a.href=dataStr
-a.download="busbarDB.json"
-a.click()
-}
+const main=document.getElementById("main")
+const branch=document.getElementById("branch")
+const line=document.getElementById("line")
+const type=document.getElementById("type")
+const hole=document.getElementById("hole")
+const len=document.getElementById("len")
+const mold=document.getElementById("mold")
+const memo=document.getElementById("memo")
 
 main.onchange=updateMain
 branch.onchange=updateLine
 line.onchange=updateLine
-type.onchange=load
+type.onchange=search
 
 fetch("busbarDB.json")
 .then(r=>r.json())
@@ -146,6 +105,5 @@ fill(main,Object.keys(DB))
 updateMain()
 })
 </script>
-
 </body>
 </html>
