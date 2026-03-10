@@ -281,22 +281,22 @@ select:focus,input:focus,textarea:focus{
       <div class="grid">
         <div class="field">
           <label for="editHole">타공</label>
-          <input id="editHole" placeholder="타공">
+          <input id="editHole">
         </div>
 
         <div class="field">
           <label for="editLength">길이</label>
-          <input id="editLength" placeholder="길이">
+          <input id="editLength">
         </div>
 
         <div class="field wide">
           <label for="editMold">금형</label>
-          <input id="editMold" placeholder="금형">
+          <input id="editMold">
         </div>
 
         <div class="field wide">
           <label for="editMemo">메모</label>
-          <textarea id="editMemo" rows="8" placeholder="메모"></textarea>
+          <textarea id="editMemo" rows="8"></textarea>
         </div>
 
         <div class="field wide">
@@ -397,7 +397,8 @@ function searchBusbar(){
   const line = byId("line").value;
   const type = byId("type").value;
 
-  const r = BUSBAR_DB?.[main]?.[branch]?.[line]?.[type];
+  const lineKey = line === "더블" ? "더블라인" : "싱글라인";
+  const r = BUSBAR_DB?.[main]?.[branch]?.[lineKey]?.[type];
   if(!r){
     clearResult();
     return;
