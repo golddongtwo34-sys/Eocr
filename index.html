@@ -593,6 +593,79 @@
       </div>
     </section>
   
+    
+    <!-- ===== TAB: Busbar DB ===== -->
+    <section id="tab_busbar" class="tab">
+      <div class="head">
+        <h2>기성 Busbar</h2>
+        <div class="badge">NII</div>
+      </div>
+
+      <div class="card">
+        <div class="grid">
+          <div class="field">
+            <label>메인 프레임</label>
+            <select id="bb_main">
+              <option>100AF</option>
+              <option>100AF S타입</option>
+              <option>200AF</option>
+              <option>400AF</option>
+              <option>600AF</option>
+              <option>접지</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>분기 프레임</label>
+            <select id="bb_branch">
+              <option>100AF</option>
+              <option>200AF</option>
+              <option>FB</option>
+              <option>ELB소</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>라인</label>
+            <select id="bb_line">
+              <option>싱글</option>
+              <option>더블</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>타입</label>
+            <select id="bb_type">
+              <option>1</option>
+              <option>2</option>
+              <option>3</option>
+              <option>4</option>
+              <option>RN</option>
+              <option>ST</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>P수 (접지용)</label>
+            <input type="number" id="bb_p" placeholder="접지 선택 시 입력">
+          </div>
+
+          <div class="field wide">
+            <button class="calc" onclick="calcBusbar()">검색</button>
+          </div>
+        </div>
+
+        <div id="bb_out" class="kv">—</div>
+
+        <div class="small">
+        ※ 현재는 DB 자리만 생성됨<br>
+        ※ 치수 데이터는 이후 추가 예정
+        </div>
+
+      </div>
+    </section>
+
+
     <!-- ===== TAB 3: Grounding ===== -->
     <section id="tab_ground" class="tab">
       <div class="head">
@@ -1092,6 +1165,26 @@ function calcBreaker(){
     '필요 최소정격: '+Ireq.toFixed(1)+' A</div>';
 }
 
+
+function calcBusbar(){
+  const main = document.getElementById("bb_main").value;
+  const branch = document.getElementById("bb_branch").value;
+  const line = document.getElementById("bb_line").value;
+  const type = document.getElementById("bb_type").value;
+  const p = document.getElementById("bb_p").value;
+
+  const out = document.getElementById("bb_out");
+
+  if(main === "접지"){
+    out.innerHTML = "접지 모드<br>라인: " + line + "<br>P수: " + (p || "-") + "<br>결과: -<br>메모: -";
+    return;
+  }
+
+  out.innerHTML =
+    "검색 키<br><b>" + main + " / " + branch + " / " + line + " / " + type + "</b><br><br>" +
+    "타공 : -<br>길이 : -<br>금형 : -<br>메모 : -";
+}
+
 </script>
 
 
@@ -1100,6 +1193,7 @@ function calcBreaker(){
   <div class="wrap">
     <button class="navBtn active" onclick="openTab('tab_breaker', this)">전선 SQ</button>
     <button class="navBtn" onclick="openTab('tab_motor', this)">모터 보호</button>
+    <button class="navBtn" onclick="openTab('tab_busbar', this)">기성 Busbar</button>
     <button class="navBtn" onclick="openTab('tab_ground', this)">접지</button>
     <button class="navBtn" onclick="openTab('tab_breaker_calc', this)">차단기</button>
   </div>
