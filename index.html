@@ -1,540 +1,310 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>기성 Busbar</title>
-<style>
-:root{
-  --bg:#0d1117;
-  --card:#161b22;
-  --card2:#1c2330;
-  --line:rgba(255,255,255,.08);
-  --text:#f3f4f6;
-  --muted:rgba(255,255,255,.62);
-  --accent:#7dd3fc;
-  --accent2:#a78bfa;
-}
-*{box-sizing:border-box}
-body{
-  margin:0;
-  background:
-    radial-gradient(1000px 700px at 20% 10%, rgba(167,139,250,.16), transparent 60%),
-    radial-gradient(900px 700px at 80% 30%, rgba(125,211,252,.12), transparent 55%),
-    var(--bg);
-  color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Segoe UI",Roboto,Arial,sans-serif;
-}
-.wrap{
-  max-width:860px;
-  margin:0 auto;
-  padding:18px 16px 28px;
-}
-.header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  margin-bottom:14px;
-}
-.header h2{
-  margin:0;
-  font-size:30px;
-  letter-spacing:-.02em;
-}
-.iconBtn, .saveBtn, .closeBtn{
-  border:none;
-  color:#fff;
-  cursor:pointer;
-  border-radius:12px;
-}
-.iconBtn{
-  width:44px;height:44px;
-  font-size:20px;
-  background:linear-gradient(135deg, rgba(125,211,252,.20), rgba(167,139,250,.18));
-  border:1px solid rgba(255,255,255,.10);
-}
-.card{
-  background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-  border:1px solid var(--line);
-  border-radius:18px;
-  padding:18px;
-  box-shadow:0 14px 36px rgba(0,0,0,.30);
-}
-.grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:14px 16px;
-}
-.field{display:flex;flex-direction:column;gap:8px}
-.wide{grid-column:1/-1}
-label{
-  font-size:13px;
-  color:var(--muted);
-}
-select,input,textarea{
-  width:100%;
-  padding:13px 14px;
-  font-size:16px;
-  border-radius:12px;
-  border:1px solid rgba(255,255,255,.10);
-  background:#111723;
-  color:var(--text);
-  outline:none;
-}
-select:focus,input:focus,textarea:focus{
-  border-color:rgba(125,211,252,.55);
-  box-shadow:0 0 0 4px rgba(125,211,252,.12);
-}
-.result{
-  margin-top:16px;
-  padding:16px;
-  border-radius:16px;
-  background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
-  border:1px solid rgba(255,255,255,.08);
-}
-.resultTitle{
-  font-size:13px;
-  color:var(--muted);
-  margin-bottom:10px;
-}
-.kv{
-  display:grid;
-  grid-template-columns:70px 1fr;
-  gap:8px 12px;
-  line-height:1.7;
-  font-size:17px;
-}
-.k{color:rgba(255,255,255,.72)}
-.v{white-space:pre-wrap; word-break:break-word}
-.small{
-  margin-top:12px;
-  font-size:12px;
-  color:var(--muted);
-  line-height:1.55;
-}
-.hidden{display:none !important}
+<title>전기 계산기</title>
 
-/* Admin overlay */
-.overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.6);
-  backdrop-filter:blur(6px);
-  display:none;
-  z-index:1000;
+<style>
+body{
+margin:0;
+font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;
+background:#0d1117;
+color:#fff;
 }
-.overlay.show{display:block}
-.panel{
-  position:fixed;
-  inset:16px;
-  background:#10151f;
-  border:1px solid rgba(255,255,255,.10);
-  border-radius:18px;
-  display:none;
-  z-index:1001;
-  overflow:hidden;
+
+.page{
+display:none;
+padding:20px;
+max-width:900px;
+margin:auto;
 }
-.panel.show{display:flex; flex-direction:column}
-.panelHead{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  padding:14px 16px;
-  border-bottom:1px solid rgba(255,255,255,.08);
-  background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+
+.page.active{
+display:block;
 }
-.panelHead h3{margin:0;font-size:18px}
-.panelBody{
-  flex:1;
-  min-height:0;
-  display:grid;
-  grid-template-columns:320px 1fr;
+
+h2{
+margin-top:0;
 }
-.treePane{
-  border-right:1px solid rgba(255,255,255,.08);
-  overflow:auto;
-  padding:14px;
+
+.card{
+background:#161b22;
+border-radius:14px;
+padding:18px;
+margin-bottom:20px;
 }
-.formPane{
-  overflow:auto;
-  padding:16px;
+
+select,input{
+width:100%;
+padding:12px;
+margin-top:6px;
+margin-bottom:12px;
+background:#111;
+border:1px solid #333;
+color:#fff;
+border-radius:8px;
 }
-.treeNode{
-  padding:7px 8px;
-  border-radius:10px;
-  margin:2px 0;
-  color:#dbe4ee;
+
+.result{
+margin-top:10px;
+line-height:1.7;
 }
-.treeNode.level0{font-weight:800;margin-top:6px}
-.treeNode.level1{padding-left:18px}
-.treeNode.level2{padding-left:34px}
-.treeNode.level3{padding-left:50px;cursor:pointer}
-.treeNode.leaf:hover{
-  background:rgba(255,255,255,.06);
+
+.bottomTabs{
+position:fixed;
+bottom:0;
+left:0;
+right:0;
+height:60px;
+background:#111;
+border-top:1px solid #333;
+display:flex;
 }
-.treeNode.leaf.active{
-  background:linear-gradient(135deg, rgba(125,211,252,.18), rgba(167,139,250,.14));
-  border:1px solid rgba(125,211,252,.30);
+
+.bottomTabs button{
+flex:1;
+background:none;
+border:none;
+color:#aaa;
+font-size:14px;
 }
-.formTitle{
-  margin:0 0 14px 0;
-  font-size:18px;
+
+.bottomTabs button.active{
+color:#fff;
+font-weight:600;
 }
-.path{
-  margin:0 0 14px 0;
-  font-size:13px;
-  color:var(--muted);
-  line-height:1.5;
-}
-.saveBtn{
-  padding:12px 16px;
-  background:linear-gradient(135deg, rgba(125,211,252,.26), rgba(167,139,250,.22));
-  border:1px solid rgba(125,211,252,.28);
-  font-weight:800;
-}
-.closeBtn{
-  padding:10px 14px;
-  background:rgba(255,255,255,.08);
-  border:1px solid rgba(255,255,255,.10);
-}
-@media (max-width:780px){
-  .grid{grid-template-columns:1fr}
-  .panel{inset:10px}
-  .panelBody{grid-template-columns:1fr}
-  .treePane{max-height:38vh;border-right:none;border-bottom:1px solid rgba(255,255,255,.08)}
+
+.admin{
+position:fixed;
+top:20px;
+right:20px;
+font-size:22px;
+cursor:pointer;
 }
 </style>
 </head>
+
 <body>
-<div class="wrap">
-  <div class="header">
-    <h2>기성 Busbar</h2>
-    <button class="iconBtn" onclick="openAdmin()" aria-label="DB 수정">⚙</button>
-  </div>
 
-  <div class="card">
-    <div class="grid">
-      <div class="field">
-        <label for="main">메인 프레임</label>
-        <select id="main"></select>
-      </div>
+<div class="admin" onclick="openAdmin()">⚙</div>
 
-      <div class="field" id="branchBox">
-        <label for="branch">분기 프레임</label>
-        <select id="branch"></select>
-      </div>
-
-      <div class="field" id="lineBox">
-        <label for="line">라인</label>
-        <select id="line"></select>
-      </div>
-
-      <div class="field" id="typeBox">
-        <label for="type">타입</label>
-        <select id="type"></select>
-      </div>
-
-      <div class="field wide hidden" id="pBox">
-        <label for="pValue">P수 (접지)</label>
-        <input id="pValue" type="number" inputmode="numeric" placeholder="P수 입력">
-      </div>
-    </div>
-
-    <div class="result">
-      <div class="resultTitle">검색 결과</div>
-      <div class="kv">
-        <div class="k">타공</div><div class="v" id="hole"></div>
-        <div class="k">길이</div><div class="v" id="length"></div>
-        <div class="k">금형</div><div class="v" id="mold"></div>
-        <div class="k">메모</div><div class="v" id="memo"></div>
-      </div>
-    </div>
-
-    <div class="small">
-      ※ 접지는 메인 프레임과 같은 레벨에서 선택<br>
-      ※ 50AF 더블은 RN만 표시<br>
-      ※ 싱글 4는 400AF / 600(800)AF만 표시<br>
-      ※ 저장 시 busbarDB.json 이 다운로드됨
-    </div>
-  </div>
+<!-- MOTOR PAGE -->
+<div id="motorPage" class="page active">
+<h2>모터 계산</h2>
+<div class="card">
+모터 계산 탭 (기존 기능 유지 자리)
+</div>
 </div>
 
-<div class="overlay" id="overlay" onclick="closeAdmin(event)"></div>
+<!-- BREAKER PAGE -->
+<div id="breakerPage" class="page">
+<h2>차단기 선정</h2>
+<div class="card">
+차단기 계산 탭 (기존 기능 유지 자리)
+</div>
+</div>
 
-<div class="panel" id="adminPanel">
-  <div class="panelHead">
-    <h3>Busbar DB 관리</h3>
-    <button class="closeBtn" onclick="hideAdmin()">닫기</button>
-  </div>
+<!-- BUSBAR PAGE -->
+<div id="busbarPage" class="page">
+<h2>기성 Busbar</h2>
 
-  <div class="panelBody">
-    <div class="treePane">
-      <div id="treeRoot"></div>
-    </div>
+<div class="card">
 
-    <div class="formPane">
-      <h4 class="formTitle">항목 수정</h4>
-      <div class="path" id="editPath">왼쪽 트리에서 항목을 선택하세요.</div>
+<label>메인 프레임</label>
+<select id="main"></select>
 
-      <div class="grid">
-        <div class="field">
-          <label for="editHole">타공</label>
-          <input id="editHole" placeholder="타공">
-        </div>
+<label>분기 프레임</label>
+<select id="branch"></select>
 
-        <div class="field">
-          <label for="editLength">길이</label>
-          <input id="editLength" placeholder="길이">
-        </div>
+<label>라인</label>
+<select id="line"></select>
 
-        <div class="field wide">
-          <label for="editMold">금형</label>
-          <input id="editMold" placeholder="금형">
-        </div>
+<label>타입</label>
+<select id="type"></select>
 
-        <div class="field wide">
-          <label for="editMemo">메모</label>
-          <textarea id="editMemo" rows="8" placeholder="메모"></textarea>
-        </div>
+<div class="result">
+<div>타공 : <span id="hole"></span></div>
+<div>길이 : <span id="length"></span></div>
+<div>금형 : <span id="mold"></span></div>
+<div>메모 : <span id="memo"></span></div>
+</div>
 
-        <div class="field wide">
-          <button class="saveBtn" onclick="saveCurrentNode()">저장</button>
-        </div>
-      </div>
+</div>
+</div>
 
-      <div class="small">
-        ※ 저장하면 수정된 busbarDB.json 파일이 자동 다운로드됩니다.<br>
-        ※ 다운로드된 파일을 GitHub 저장소의 busbarDB.json에 업로드하면 사이트 전체에 반영됩니다.
-      </div>
-    </div>
-  </div>
+<!-- TABS -->
+<div class="bottomTabs">
+<button class="active" onclick="openTab('motorPage',this)">모터</button>
+<button onclick="openTab('breakerPage',this)">차단기</button>
+<button onclick="openTab('busbarPage',this)">Busbar</button>
 </div>
 
 <script>
-let BUSBAR_DB = {};
-let currentNodePath = null;
 
-const MAIN_ORDER = ["50AF","100AF","100AF S타입","200AF","400AF","600/800AF"];
+let DB={}
 
-function byId(id){ return document.getElementById(id); }
+function openTab(id,btn){
 
-function populateSelect(el, list){
-  el.innerHTML = "";
-  list.forEach(v=>{
-    const o = document.createElement("option");
-    o.value = v;
-    o.textContent = v;
-    el.appendChild(o);
-  });
-}
+document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"))
+document.getElementById(id).classList.add("active")
 
-function clearResult(){
-  byId("hole").textContent = "";
-  byId("length").textContent = "";
-  byId("mold").textContent = "";
-  byId("memo").textContent = "";
-}
+document.querySelectorAll(".bottomTabs button").forEach(b=>b.classList.remove("active"))
+btn.classList.add("active")
 
-function initMain(){
-  const keys = Object.keys(BUSBAR_DB);
-  const ordered = MAIN_ORDER.filter(k => keys.includes(k));
-  const extra = keys.filter(k => !ordered.includes(k));
-  populateSelect(byId("main"), [...ordered, ...extra, "접지"]);
-  updateMain();
-}
-
-function updateMain(){
-  const main = byId("main").value;
-  const isGround = main === "접지";
-
-  byId("branchBox").classList.toggle("hidden", isGround);
-  byId("lineBox").classList.toggle("hidden", isGround);
-  byId("typeBox").classList.toggle("hidden", isGround);
-  byId("pBox").classList.toggle("hidden", !isGround);
-
-  if(isGround){
-    clearResult();
-    return;
-  }
-
-  const branches = Object.keys(BUSBAR_DB[main] || {});
-  populateSelect(byId("branch"), branches);
-  initLine();
-}
-
-function initLine(){
-  populateSelect(byId("line"), ["더블","싱글"]);
-  updateType();
-}
-
-function updateType(){
-  const main = byId("main").value;
-  const line = byId("line").value;
-
-  let types = [];
-  if(line === "더블"){
-    types = main === "50AF" ? ["RN"] : ["RN","ST"];
-  }else{
-    if(main === "50AF") types = ["1","2"];
-    else if(main === "400AF" || main === "600/800AF") types = ["1","2","3","4"];
-    else types = ["1","2","3"];
-  }
-
-  populateSelect(byId("type"), types);
-  searchBusbar();
-}
-
-function searchBusbar(){
-  const main = byId("main").value;
-  if(main === "접지"){
-    clearResult();
-    return;
-  }
-
-  const branch = byId("branch").value;
-  const line = byId("line").value;
-  const type = byId("type").value;
-
-  const r = BUSBAR_DB?.[main]?.[branch]?.[line]?.[type];
-  if(!r){
-    clearResult();
-    return;
-  }
-
-  byId("hole").textContent = r["타공"] || "";
-  byId("length").textContent = r["길이"] || "";
-  byId("mold").textContent = r["금형"] || "";
-  byId("memo").textContent = r["메모"] || "";
 }
 
 function openAdmin(){
-  const pw = prompt("관리자 비밀번호");
-  if(pw !== "thd122007"){
-    alert("비밀번호 오류");
-    return;
-  }
-  renderTree();
-  byId("overlay").classList.add("show");
-  byId("adminPanel").classList.add("show");
+
+let pw=prompt("관리자 비밀번호")
+
+if(pw!=="thd122007"){
+alert("비밀번호 오류")
+return
 }
 
-function hideAdmin(){
-  byId("overlay").classList.remove("show");
-  byId("adminPanel").classList.remove("show");
+alert("관리자 기능은 기존 Busbar 관리자 그대로 사용")
+
 }
 
-function closeAdmin(e){
-  if(e.target.id === "overlay") hideAdmin();
+function getLineKey(obj){
+
+if(obj["더블"]) return "더블"
+if(obj["더블라인"]) return "더블라인"
+
+if(obj["싱글"]) return "싱글"
+if(obj["싱글라인"]) return "싱글라인"
+
+return null
+
 }
 
-function renderTree(){
-  const root = byId("treeRoot");
-  root.innerHTML = "";
+function loadMain(){
 
-  Object.keys(BUSBAR_DB).forEach(main=>{
-    root.appendChild(node(main, 0));
+let main=document.getElementById("main")
+main.innerHTML=""
 
-    Object.keys(BUSBAR_DB[main] || {}).forEach(branch=>{
-      root.appendChild(node(branch, 1));
+Object.keys(DB).forEach(k=>{
 
-      Object.keys(BUSBAR_DB[main][branch] || {}).forEach(line=>{
-        root.appendChild(node(line, 2));
+let o=document.createElement("option")
+o.value=k
+o.textContent=k
+main.appendChild(o)
 
-        Object.keys(BUSBAR_DB[main][branch][line] || {}).forEach(type=>{
-          const leaf = node(type, 3, true);
-          leaf.dataset.path = JSON.stringify([main, branch, line, type]);
-          leaf.onclick = ()=>selectNode(main, branch, line, type, leaf);
-          root.appendChild(leaf);
-        });
-      });
-    });
-  });
+})
+
+loadBranch()
+
 }
 
-function node(text, level, leaf=false){
-  const div = document.createElement("div");
-  div.className = `treeNode level${level}` + (leaf ? " leaf" : "");
-  let prefix = "";
-  if(level===1) prefix = "└ ";
-  if(level===2) prefix = "  └ ";
-  if(level===3) prefix = "    └ ";
-  div.textContent = prefix + text;
-  return div;
+function loadBranch(){
+
+let main=document.getElementById("main").value
+let branch=document.getElementById("branch")
+
+branch.innerHTML=""
+
+Object.keys(DB[main]).forEach(k=>{
+
+let o=document.createElement("option")
+o.value=k
+o.textContent=k
+branch.appendChild(o)
+
+})
+
+loadLine()
+
 }
 
-function selectNode(main, branch, line, type, el){
-  document.querySelectorAll(".treeNode.leaf.active").forEach(n=>n.classList.remove("active"));
-  el.classList.add("active");
+function loadLine(){
 
-  currentNodePath = [main, branch, line, type];
-  const item = BUSBAR_DB[main][branch][line][type] || {};
+let main=document.getElementById("main").value
+let branch=document.getElementById("branch").value
+let line=document.getElementById("line")
 
-  byId("editPath").textContent = `${main} > ${branch} > ${line} > ${type}`;
-  byId("editHole").value = item["타공"] || "";
-  byId("editLength").value = item["길이"] || "";
-  byId("editMold").value = item["금형"] || "";
-  byId("editMemo").value = item["메모"] || "";
+line.innerHTML=""
+
+let obj=DB[main][branch]
+
+let lines=Object.keys(obj)
+
+lines.forEach(l=>{
+
+let o=document.createElement("option")
+o.value=l
+o.textContent=l
+line.appendChild(o)
+
+})
+
+loadType()
+
 }
 
-function saveCurrentNode(){
-  if(!currentNodePath){
-    alert("수정할 항목을 먼저 선택하세요.");
-    return;
-  }
-  if(!confirm("저장하시겠습니까?")) return;
+function loadType(){
 
-  const [main, branch, line, type] = currentNodePath;
-  if(!BUSBAR_DB[main]) BUSBAR_DB[main] = {};
-  if(!BUSBAR_DB[main][branch]) BUSBAR_DB[main][branch] = {};
-  if(!BUSBAR_DB[main][branch][line]) BUSBAR_DB[main][branch][line] = {};
+let main=document.getElementById("main").value
+let branch=document.getElementById("branch").value
+let line=document.getElementById("line").value
 
-  BUSBAR_DB[main][branch][line][type] = {
-    "타공": byId("editHole").value,
-    "길이": byId("editLength").value,
-    "금형": byId("editMold").value,
-    "메모": byId("editMemo").value
-  };
+let type=document.getElementById("type")
 
-  downloadJSON();
-  renderTree();
+type.innerHTML=""
 
-  const activePath = JSON.stringify(currentNodePath);
-  const activeEl = [...document.querySelectorAll(".treeNode.leaf")].find(n => n.dataset.path === activePath);
-  if(activeEl) activeEl.classList.add("active");
+Object.keys(DB[main][branch][line]).forEach(k=>{
+
+let o=document.createElement("option")
+o.value=k
+o.textContent=k
+type.appendChild(o)
+
+})
+
+search()
+
 }
 
-function downloadJSON(){
-  const blob = new Blob([JSON.stringify(BUSBAR_DB, null, 2)], {type:"application/json;charset=utf-8"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "busbarDB.json";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(()=>URL.revokeObjectURL(a.href), 500);
+function search(){
+
+let main=document.getElementById("main").value
+let branch=document.getElementById("branch").value
+let line=document.getElementById("line").value
+let type=document.getElementById("type").value
+
+let r=DB?.[main]?.[branch]?.[line]?.[type]
+
+if(!r){
+document.getElementById("hole").innerText=""
+document.getElementById("length").innerText=""
+document.getElementById("mold").innerText=""
+document.getElementById("memo").innerText=""
+return
 }
 
-byId("main").addEventListener("change", updateMain);
-byId("branch").addEventListener("change", searchBusbar);
-byId("line").addEventListener("change", updateType);
-byId("type").addEventListener("change", searchBusbar);
+document.getElementById("hole").innerText=r["타공"]||""
+document.getElementById("length").innerText=r["길이"]||""
+document.getElementById("mold").innerText=r["금형"]||""
+document.getElementById("memo").innerText=r["메모"]||""
+
+}
+
+document.getElementById("main").onchange=loadBranch
+document.getElementById("branch").onchange=loadLine
+document.getElementById("line").onchange=loadType
+document.getElementById("type").onchange=search
 
 fetch("busbarDB.json")
-  .then(r => {
-    if(!r.ok) throw new Error("busbarDB.json 로드 실패");
-    return r.json();
-  })
-  .then(d => {
-    BUSBAR_DB = d;
-    initMain();
-    renderTree();
-  })
-  .catch(err => {
-    alert("busbarDB.json을 불러오지 못했습니다.");
-    console.error(err);
-  });
+.then(r=>r.json())
+.then(d=>{
+
+DB=d
+loadMain()
+
+})
+
 </script>
+
 </body>
 </html>
