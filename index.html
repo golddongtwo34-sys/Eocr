@@ -223,16 +223,14 @@ select:focus,input:focus,textarea:focus{
     <button class="iconBtn" id="adminBtn" onclick="openAdmin()" aria-label="DB 수정">⚙</button>
   </div>
 
-
   <div id="motorPage" class="page active">
     <div class="card">
       <div class="grid">
         <div class="field">
-          <label for="motorVoltage">전압 구간</label>
-          <select id="motorVoltage">
-            <option value="220">220~240V</option>
-            <option value="380" selected>380~440V</option>
-            <option value="500">500~550V</option>
+          <label for="motorPhase">상</label>
+          <select id="motorPhase">
+            <option value="three">삼상</option>
+            <option value="single">단상</option>
           </select>
         </div>
         <div class="field">
@@ -243,38 +241,33 @@ select:focus,input:focus,textarea:focus{
           </select>
         </div>
         <div class="field">
-          <label for="motorValue">값</label>
-          <input id="motorValue" inputmode="decimal" placeholder="예: 30 또는 40">
+          <label for="motorValue">값 선택</label>
+          <select id="motorValue"></select>
         </div>
         <div class="field">
           <label for="motorStart">기동 방식</label>
           <select id="motorStart">
             <option value="star">Y-Δ</option>
+            <option value="dol">직입</option>
+            <option value="inv">인버터</option>
           </select>
         </div>
         <div class="field wide">
-          <button class="calcBtn" onclick="calcMotor()">검색</button>
+          <button class="calcBtn" onclick="calcMotor()">계산</button>
         </div>
       </div>
       <div class="result">
-        <div class="resultTitle">모터 조견표 결과</div>
+        <div class="resultTitle">모터 계산 결과</div>
         <div class="kv">
-          <div class="k">모터출력</div><div class="v" id="motorOutput"></div>
-          <div class="k">전부하전류</div><div class="v" id="motorCurrent"></div>
-          <div class="k">전자접촉기</div><div class="v" id="motorMcm"></div>
-          <div class="k">AC3</div><div class="v" id="motorAc3"></div>
-          <div class="k">TOR</div><div class="v" id="motorTor"></div>
-          <div class="k">TOR범위</div><div class="v" id="motorRange"></div>
-          <div class="k">MCY</div><div class="v" id="motorMcy"></div>
-          <div class="k">MCD</div><div class="v" id="motorMcd"></div>
-          <div class="k">MCCB</div><div class="v" id="motorMccb"></div>
-          <div class="k">AT</div><div class="v" id="motorAT"></div>
+          <div class="k">정격전류</div><div class="v" id="motorCurrent"></div>
+          <div class="k">EOCR</div><div class="v" id="motorEocr"></div>
+          <div class="k">세팅값</div><div class="v" id="motorSet"></div>
+          <div class="k">전선SQ</div><div class="v" id="motorWire"></div>
         </div>
       </div>
-      <div class="small">※ Y-Δ 조견표 조회형 / 정확히 일치하는 kW 또는 HP 값만 검색합니다. 일치하는 항목이 없으면 결과를 표시하지 않습니다.</div>
+      <div class="small">※ 기준: 삼상 380V / 단상 220V, 역률 0.9, 효율 0.85 기준 간이 계산</div>
     </div>
   </div>
-
 
   <div id="breakerPage" class="page">
     <div class="card">
@@ -435,6 +428,29 @@ const MAIN_ORDER = ["50AF","100AF","100AF S타입","200AF","400AF","600/800AF"];
 
 function byId(id){ return document.getElementById(id); }
 
+
+const MOTOR_VALUES = {
+  kw: ["5.5","7.5","11","15","18.5","22","30","37","45","55","75","90","110","132","160"],
+  hp: ["7.5","10","15","20","25","30","40","50","60","75","100","125","150","180","220"]
+};
+
+function initMotorValueOptions(){
+  const mode = byId("motorMode").value;
+  const select = byId("motorValue");
+  if(!select) return;
+  const prev = select.value;
+  select.innerHTML = "";
+  MOTOR_VALUES[mode].forEach(v=>{
+    const o = document.createElement("option");
+    o.value = v;
+    o.textContent = v;
+    select.appendChild(o);
+  });
+  if (MOTOR_VALUES[mode].includes(prev)) {
+    select.value = prev;
+  }
+}
+
 function openTab(id, btn){
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   byId(id).classList.add("active");
@@ -443,630 +459,52 @@ function openTab(id, btn){
   byId("adminBtn").style.visibility = id === "busbarPage" ? "visible" : "hidden";
 }
 
-
 // ===== MOTOR =====
-const MOTOR_TABLE = {
-  "220": {
-    "label": "220~240V",
-    "rows": [
-      {
-        "kw": 5.5,
-        "hp": 7.5,
-        "fla": "20 A",
-        "mcm": "MC-12a,12b",
-        "ac3": "13 A",
-        "tor": "MT-32",
-        "range": "16~22 A",
-        "mcy": "MC-9a,9b",
-        "mcd": "MC-12a,12b",
-        "mccb": "ABS53c",
-        "at": "40 A"
-      },
-      {
-        "kw": 7.5,
-        "hp": 10,
-        "fla": "27 A",
-        "mcm": "MC-18a,18b",
-        "ac3": "18 A",
-        "tor": "MT-32",
-        "range": "22~32 A",
-        "mcy": "MC-9a,9b",
-        "mcd": "MC-18a,18b",
-        "mccb": "ABS53c",
-        "at": "50 A"
-      },
-      {
-        "kw": 11,
-        "hp": 15,
-        "fla": "38 A",
-        "mcm": "MC-22b",
-        "ac3": "22 A",
-        "tor": "MT-32",
-        "range": "28~40 A",
-        "mcy": "MC-12a,12b",
-        "mcd": "MC-22b",
-        "mccb": "ABS103c",
-        "at": "75 A"
-      },
-      {
-        "kw": 15,
-        "hp": 20,
-        "fla": "51 A",
-        "mcm": "MC-32a",
-        "ac3": "32 A",
-        "tor": "MT-63",
-        "range": "45~65 A",
-        "mcy": "MC-18a,18b",
-        "mcd": "MC-32a",
-        "mccb": "ABS103c",
-        "at": "100 A"
-      },
-      {
-        "kw": 18.5,
-        "hp": 25,
-        "fla": "61 A",
-        "mcm": "MC-40a",
-        "ac3": "40 A",
-        "tor": "MT-63",
-        "range": "45~65 A",
-        "mcy": "MC-22b",
-        "mcd": "MC-40a",
-        "mccb": "ABS103c",
-        "at": "125 A"
-      },
-      {
-        "kw": 22,
-        "hp": 30,
-        "fla": "72 A",
-        "mcm": "MC-50a",
-        "ac3": "55 A",
-        "tor": "MT-95",
-        "range": "63~85 A",
-        "mcy": "MC-32a",
-        "mcd": "MC-50a",
-        "mccb": "ABS203c",
-        "at": "150 A"
-      },
-      {
-        "kw": 30,
-        "hp": 40,
-        "fla": "96 A",
-        "mcm": "MC-65a",
-        "ac3": "65 A",
-        "tor": "MT-95",
-        "range": "80~100 A",
-        "mcy": "MC-32a",
-        "mcd": "MC-65a",
-        "mccb": "ABS203c",
-        "at": "175 A"
-      },
-      {
-        "kw": 37,
-        "hp": 50,
-        "fla": "115 A",
-        "mcm": "MC-75a",
-        "ac3": "75 A",
-        "tor": "MT-150",
-        "range": "95~130 A",
-        "mcy": "MC-40a",
-        "mcd": "MC-75a",
-        "mccb": "ABS203c",
-        "at": "200 A"
-      },
-      {
-        "kw": 45,
-        "hp": 60,
-        "fla": "140 A",
-        "mcm": "MC-85a",
-        "ac3": "85 A",
-        "tor": "MT-150",
-        "range": "110~150 A",
-        "mcy": "MC-50a",
-        "mcd": "MC-85a",
-        "mccb": "ABS403c",
-        "at": "300 A"
-      },
-      {
-        "kw": 55,
-        "hp": 75,
-        "fla": "169 A",
-        "mcm": "MC-100a",
-        "ac3": "105 A",
-        "tor": "MT-225",
-        "range": "120~185 A",
-        "mcy": "MC-65a",
-        "mcd": "MC-100a",
-        "mccb": "ABS403c",
-        "at": "400 A"
-      },
-      {
-        "kw": 75,
-        "hp": 100,
-        "fla": "230 A",
-        "mcm": "MC-150a",
-        "ac3": "150 A",
-        "tor": "MT-400",
-        "range": "160~240 A",
-        "mcy": "MC-85a",
-        "mcd": "MC-150a",
-        "mccb": "ABS603c",
-        "at": "500 A"
-      },
-      {
-        "kw": 90,
-        "hp": 125,
-        "fla": "278 A",
-        "mcm": "MC-185a",
-        "ac3": "185 A",
-        "tor": "MT-400",
-        "range": "200~330 A",
-        "mcy": "MC-100a",
-        "mcd": "MC-185a",
-        "mccb": "ABS603c",
-        "at": "600 A"
-      },
-      {
-        "kw": 110,
-        "hp": 150,
-        "fla": "340 A",
-        "mcm": "MC-225a",
-        "ac3": "225 A",
-        "tor": "MT-400",
-        "range": "260~400 A",
-        "mcy": "MC-130a",
-        "mcd": "MC-225a",
-        "mccb": "ABS803c",
-        "at": "800 A"
-      }
-    ]
-  },
-  "380": {
-    "label": "380~440V",
-    "rows": [
-      {
-        "kw": 5.5,
-        "hp": 7.5,
-        "fla": "11.5 A",
-        "mcm": "MC-9a,9b",
-        "ac3": "9 A",
-        "tor": "MT-12,32",
-        "range": "9~13 A",
-        "mcy": "MC-9a,9b",
-        "mcd": "MC-9a,9b",
-        "mccb": "ABS33c",
-        "at": "30 A"
-      },
-      {
-        "kw": 7.5,
-        "hp": 10,
-        "fla": "15.5 A",
-        "mcm": "MC-9a,9b",
-        "ac3": "9 A",
-        "tor": "MT-12,32",
-        "range": "12~18 A",
-        "mcy": "MC-9a,9b",
-        "mcd": "MC-9a,9b",
-        "mccb": "ABS33c",
-        "at": "30 A"
-      },
-      {
-        "kw": 11,
-        "hp": 15,
-        "fla": "22 A",
-        "mcm": "MC-18a,18b",
-        "ac3": "18 A",
-        "tor": "MT-32",
-        "range": "18~25 A",
-        "mcy": "MC-9a,9b",
-        "mcd": "MC-18a,18b",
-        "mccb": "ABS53c",
-        "at": "40 A"
-      },
-      {
-        "kw": 15,
-        "hp": 20,
-        "fla": "29 A",
-        "mcm": "MC-18a,18b",
-        "ac3": "18 A",
-        "tor": "MT-32",
-        "range": "22~32 A",
-        "mcy": "MC-12a,12b",
-        "mcd": "MC-18a,18b",
-        "mccb": "ABS63c",
-        "at": "60 A"
-      },
-      {
-        "kw": 18.5,
-        "hp": 25,
-        "fla": "35 A",
-        "mcm": "MC-22b",
-        "ac3": "22 A",
-        "tor": "MT-32",
-        "range": "28~40 A",
-        "mcy": "MC-12a,12b",
-        "mcd": "MC-22b",
-        "mccb": "ABS103c",
-        "at": "75 A"
-      },
-      {
-        "kw": 22,
-        "hp": 30,
-        "fla": "41 A",
-        "mcm": "MC-32a",
-        "ac3": "32 A",
-        "tor": "MT-63",
-        "range": "34~50 A",
-        "mcy": "MC-18a,18b",
-        "mcd": "MC-32a",
-        "mccb": "ABS103c",
-        "at": "75 A"
-      },
-      {
-        "kw": 30,
-        "hp": 40,
-        "fla": "55 A",
-        "mcm": "MC-32a",
-        "ac3": "30 A",
-        "tor": "MT-63",
-        "range": "45~65 A",
-        "mcy": "MC-22b",
-        "mcd": "MC-32a",
-        "mccb": "ABS103c",
-        "at": "100 A"
-      },
-      {
-        "kw": 37,
-        "hp": 50,
-        "fla": "66 A",
-        "mcm": "MC-40a",
-        "ac3": "40 A",
-        "tor": "MT-95",
-        "range": "54~75 A",
-        "mcy": "MC-22b",
-        "mcd": "MC-40a",
-        "mccb": "ABS103c",
-        "at": "125 A"
-      },
-      {
-        "kw": 45,
-        "hp": 60,
-        "fla": "80 A",
-        "mcm": "MC-50a",
-        "ac3": "50 A",
-        "tor": "MT-95",
-        "range": "70~95 A",
-        "mcy": "MC-32a",
-        "mcd": "MC-50a",
-        "mccb": "ABS203c",
-        "at": "150 A"
-      },
-      {
-        "kw": 55,
-        "hp": 75,
-        "fla": "97 A",
-        "mcm": "MC-65a",
-        "ac3": "65 A",
-        "tor": "MT-150",
-        "range": "80~100 A",
-        "mcy": "MC-40a",
-        "mcd": "MC-65a",
-        "mccb": "ABS203c",
-        "at": "175 A"
-      },
-      {
-        "kw": 75,
-        "hp": 100,
-        "fla": "132 A",
-        "mcm": "MC-85a",
-        "ac3": "85 A",
-        "tor": "MT-225",
-        "range": "110~150 A",
-        "mcy": "MC-65a",
-        "mcd": "MC-85a",
-        "mccb": "ABS203c",
-        "at": "250 A"
-      },
-      {
-        "kw": 90,
-        "hp": 125,
-        "fla": "160 A",
-        "mcm": "MC-100a",
-        "ac3": "105 A",
-        "tor": "MT-225",
-        "range": "120~185 A",
-        "mcy": "MC-65a",
-        "mcd": "MC-100a",
-        "mccb": "ABS403c",
-        "at": "350 A"
-      },
-      {
-        "kw": 110,
-        "hp": 150,
-        "fla": "195 A",
-        "mcm": "MC-130a",
-        "ac3": "130 A",
-        "tor": "MT-225",
-        "range": "160~240 A",
-        "mcy": "MC-100a",
-        "mcd": "MC-130a",
-        "mccb": "ABS603c",
-        "at": "500 A"
-      },
-      {
-        "kw": 132,
-        "hp": 180,
-        "fla": "230 A",
-        "mcm": "MC-150a",
-        "ac3": "150 A",
-        "tor": "MT-400",
-        "range": "160~240 A",
-        "mcy": "MC-130a",
-        "mcd": "MC-150a",
-        "mccb": "ABS603c",
-        "at": "500 A"
-      },
-      {
-        "kw": 160,
-        "hp": 220,
-        "fla": "280 A",
-        "mcm": "MC-185a",
-        "ac3": "185 A",
-        "tor": "MT-400",
-        "range": "200~330 A",
-        "mcy": "MC-150a",
-        "mcd": "MC-185a",
-        "mccb": "ABS603c",
-        "at": "600 A"
-      }
-    ]
-  },
-  "500": {
-    "label": "500~550V",
-    "rows": [
-      {
-        "kw": 5.5,
-        "hp": 7.5,
-        "fla": "9.2 A",
-        "mcm": "MC-9a,9b",
-        "ac3": "7 A",
-        "tor": "MT-12,32",
-        "range": "7~10 A",
-        "mcy": "MC-9a,9b",
-        "mcd": "MC-9a,9b",
-        "mccb": "ABS33c",
-        "at": "20 A"
-      },
-      {
-        "kw": 7.5,
-        "hp": 10,
-        "fla": "12.4 A",
-        "mcm": "MC-12a,12b",
-        "ac3": "12 A",
-        "tor": "MT-12,32",
-        "range": "9~13 A",
-        "mcy": "MC-9a,9b",
-        "mcd": "MC-12a,12b",
-        "mccb": "ABS53c",
-        "at": "30 A"
-      },
-      {
-        "kw": 11,
-        "hp": 15,
-        "fla": "17.6 A",
-        "mcm": "MC-12a,12b",
-        "ac3": "12 A",
-        "tor": "MT-32",
-        "range": "12~18 A",
-        "mcy": "MC-9a,9b",
-        "mcd": "MC-12a,12b",
-        "mccb": "ABS53c",
-        "at": "40 A"
-      },
-      {
-        "kw": 15,
-        "hp": 20,
-        "fla": "23 A",
-        "mcm": "MC-22b",
-        "ac3": "20 A",
-        "tor": "MT-32",
-        "range": "18~25 A",
-        "mcy": "MC-12a,12b",
-        "mcd": "MC-22b",
-        "mccb": "ABS53c",
-        "at": "50 A"
-      },
-      {
-        "kw": 18.5,
-        "hp": 25,
-        "fla": "28 A",
-        "mcm": "MC-22b",
-        "ac3": "20 A",
-        "tor": "MT-32",
-        "range": "22~32 A",
-        "mcy": "MC-12a,12b",
-        "mcd": "MC-22b",
-        "mccb": "ABS63c",
-        "at": "60 A"
-      },
-      {
-        "kw": 22,
-        "hp": 30,
-        "fla": "33 A",
-        "mcm": "MC-22b",
-        "ac3": "20 A",
-        "tor": "MT-63",
-        "range": "28~40 A",
-        "mcy": "MC-12a,12b",
-        "mcd": "MC-22b",
-        "mccb": "ABS103c",
-        "at": "75 A"
-      },
-      {
-        "kw": 30,
-        "hp": 40,
-        "fla": "44 A",
-        "mcm": "MC-32a",
-        "ac3": "28 A",
-        "tor": "MT-63",
-        "range": "34~50 A",
-        "mcy": "MC-22b",
-        "mcd": "MC-32a",
-        "mccb": "ABS103c",
-        "at": "100 A"
-      },
-      {
-        "kw": 37,
-        "hp": 50,
-        "fla": "53 A",
-        "mcm": "MC-40a",
-        "ac3": "32 A",
-        "tor": "MT-63",
-        "range": "45~65 A",
-        "mcy": "MC-22b",
-        "mcd": "MC-40a",
-        "mccb": "ABS103c",
-        "at": "100 A"
-      },
-      {
-        "kw": 45,
-        "hp": 60,
-        "fla": "64 A",
-        "mcm": "MC-50a",
-        "ac3": "43 A",
-        "tor": "MT-95",
-        "range": "54~75 A",
-        "mcy": "MC-32a",
-        "mcd": "MC-50a",
-        "mccb": "ABS103c",
-        "at": "125 A"
-      },
-      {
-        "kw": 55,
-        "hp": 75,
-        "fla": "78 A",
-        "mcm": "MC-65a",
-        "ac3": "60 A",
-        "tor": "MT-95",
-        "range": "63~85 A",
-        "mcy": "MC-32a",
-        "mcd": "MC-65a",
-        "mccb": "ABS203c",
-        "at": "150 A"
-      },
-      {
-        "kw": 75,
-        "hp": 100,
-        "fla": "106 A",
-        "mcm": "MC-75a",
-        "ac3": "75 A",
-        "tor": "MT-225",
-        "range": "85~125 A",
-        "mcy": "MC-50a",
-        "mcd": "MC-75a",
-        "mccb": "ABS203c",
-        "at": "200 A"
-      },
-      {
-        "kw": 90,
-        "hp": 125,
-        "fla": "128 A",
-        "mcm": "MC-85a",
-        "ac3": "100 A",
-        "tor": "MT-225",
-        "range": "100~160 A",
-        "mcy": "MC-65a",
-        "mcd": "MC-85a",
-        "mccb": "ABS203c",
-        "at": "250 A"
-      },
-      {
-        "kw": 110,
-        "hp": 150,
-        "fla": "156 A",
-        "mcm": "MC-150a",
-        "ac3": "180 A",
-        "tor": "MT-225",
-        "range": "120~185 A",
-        "mcy": "MC-75a",
-        "mcd": "MC-150a",
-        "mccb": "ABS403c",
-        "at": "350 A"
-      },
-      {
-        "kw": 132,
-        "hp": 180,
-        "fla": "184 A",
-        "mcm": "MC-185a",
-        "ac3": "180 A",
-        "tor": "MT-225",
-        "range": "120~185 A",
-        "mcy": "MC-85a",
-        "mcd": "MC-185a",
-        "mccb": "ABS403c",
-        "at": "400 A"
-      },
-      {
-        "kw": 160,
-        "hp": 220,
-        "fla": "224 A",
-        "mcm": "MC-185a",
-        "ac3": "180 A",
-        "tor": "MT-400",
-        "range": "160~240 A",
-        "mcy": "MC-85a",
-        "mcd": "MC-185a",
-        "mccb": "ABS603c",
-        "at": "500 A"
-      }
-    ]
-  }
-};
-
-function motorClear(msg){
-  byId("motorOutput").textContent = msg || "";
-  ["motorCurrent","motorMcm","motorAc3","motorTor","motorRange","motorMcy","motorMcd","motorMccb","motorAT"].forEach(id=>byId(id).textContent = "");
-}
-
-function motorFindExact(rows, mode, value){
-  const key = mode === "hp" ? "hp" : "kw";
-  for(const row of rows){
-    if(Number(row[key]) === Number(value)) return row;
-  }
-  return null;
-}
-
-function calcMotor(){
-  const voltage = byId("motorVoltage").value;
+function motorCurrentFromMode(){
+  const phase = byId("motorPhase").value;
   const mode = byId("motorMode").value;
-  const value = Number((byId("motorValue").value || "").replace(",", "."));
-  if(!isFinite(value) || value <= 0){
-    motorClear("값을 입력하세요.");
+  const val = Number((byId("motorValue").value || "").replace(",", "."));
+  if(!isFinite(val) || val <= 0) return null;
+
+  if(mode === "amp") return val;
+
+  const kw = mode === "kw" ? val : val * 0.746;
+  if(phase === "single"){
+    return (1000 * kw) / (220 * 0.90 * 0.85);
+  }
+  return (1000 * kw) / (1.732 * 380 * 0.85 * 0.90);
+}
+function motorEocrModel(i){
+  if(i <= 22) return "GMP22-2P";
+  if(i <= 40) return "GMP40-2P";
+  return "GMP60-3TZ";
+}
+function cableKIV(i){
+  const target = Math.ceil(i * 1.25);
+  const tbl = [
+    {sq:"1.5㎟", A:18},{sq:"2.5㎟", A:24},{sq:"4㎟", A:32},{sq:"6㎟", A:41},
+    {sq:"10㎟", A:57},{sq:"16㎟", A:76},{sq:"25㎟", A:101},{sq:"35㎟", A:125},
+    {sq:"50㎟", A:151},{sq:"70㎟", A:192},{sq:"95㎟", A:232}
+  ];
+  for(const r of tbl){ if(r.A > target) return r.sq; }
+  return tbl[tbl.length-1].sq;
+}
+function calcMotor(){
+  const i = motorCurrentFromMode();
+  if(i == null){
+    byId("motorCurrent").textContent = "값을 입력하세요.";
+    byId("motorEocr").textContent = "";
+    byId("motorSet").textContent = "";
+    byId("motorWire").textContent = "";
     return;
   }
-  const table = MOTOR_TABLE[voltage];
-  if(!table){
-    motorClear("전압 데이터를 찾을 수 없습니다.");
-    return;
-  }
-  const row = motorFindExact(table.rows, mode, value);
-  if(!row){
-    motorClear("조견표에 없는 값입니다. 표에 있는 kW/HP만 입력하세요.");
-    return;
-  }
-  byId("motorOutput").textContent = `${row.kw} kW (${row.hp} HP) / ${table.label}`;
-  byId("motorCurrent").textContent = row.fla;
-  byId("motorMcm").textContent = row.mcm;
-  byId("motorAc3").textContent = row.ac3;
-  byId("motorTor").textContent = row.tor;
-  byId("motorRange").textContent = row.range;
-  byId("motorMcy").textContent = row.mcy;
-  byId("motorMcd").textContent = row.mcd;
-  byId("motorMccb").textContent = row.mccb;
-  byId("motorAT").textContent = row.at;
+  byId("motorCurrent").textContent = i.toFixed(1) + " A";
+  byId("motorEocr").textContent = motorEocrModel(i);
+  byId("motorSet").textContent = (i * 1.10).toFixed(1) + " A";
+  byId("motorWire").textContent = cableKIV(i);
 }
 
 // ===== BREAKER =====
-
 function calcBreaker(){
   const mode = byId("breakerMode").value;
   const val = Number((byId("breakerValue").value || "").replace(",", "."));
@@ -1274,6 +712,7 @@ function downloadJSON(){
   setTimeout(()=>URL.revokeObjectURL(a.href), 500);
 }
 
+byId("motorMode").addEventListener("change", initMotorValueOptions);
 byId("main").addEventListener("change", updateMain);
 byId("branch").addEventListener("change", searchBusbar);
 byId("line").addEventListener("change", updateType);
@@ -1286,6 +725,7 @@ fetch("busbarDB.json")
   })
   .then(d => {
     BUSBAR_DB = d;
+    initMotorValueOptions();
     initMain();
     renderTree();
     byId("adminBtn").style.visibility = "hidden";
