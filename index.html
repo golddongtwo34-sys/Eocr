@@ -227,16 +227,12 @@ select:focus,input:focus,textarea:focus{
     <div class="card">
       <div class="grid">
         <div class="field">
-          <label for="motorPhase">상</label>
-          <select id="motorPhase">
-            <option value="three">삼상</option>
-            <option value="single">단상</option>
+          <label for="motorVoltage">전압</label>
+          <select id="motorVoltage">
+            <option value="220">220~240V</option>
+            <option value="380" selected>380~440V</option>
+            <option value="500">500~550V</option>
           </select>
-        </div>
-        <div class="field">
-          <label for="motorMode">입력 방식</label>
-          <select id="motorMode">
-            </select>
         </div>
         <div class="field">
           <label for="motorStart">기동방식</label>
@@ -246,7 +242,7 @@ select:focus,input:focus,textarea:focus{
           </select>
         </div>
         <div class="field">
-          <label for="motorMode" style="display:none"></label>
+          <label for="motorMode">입력 방식</label>
           <select id="motorMode">
             <option value="kw">kW</option>
             <option value="hp">HP</option>
@@ -256,16 +252,8 @@ select:focus,input:focus,textarea:focus{
           <label for="motorValue">값 선택</label>
           <select id="motorValue"></select>
         </div>
-        <div class="field">
-          <label for="motorStart">기동 방식</label>
-          <select id="motorStart">
-            <option value="star">Y-Δ</option>
-            <option value="dol">직입</option>
-            <option value="inv">인버터</option>
-          </select>
-        </div>
         <div class="field wide">
-          <button class="calcBtn" onclick="calcMotor()">계산</button>
+          <button class="calcBtn" onclick="calcMotor()">검색</button>
         </div>
       </div>
       <div class="result">
@@ -277,7 +265,7 @@ select:focus,input:focus,textarea:focus{
           <div class="k">전선SQ</div><div class="v" id="motorWire"></div>
         </div>
       </div>
-      <div class="small">※ 기준: 삼상 380V / 단상 220V, 역률 0.9, 효율 0.85 기준 간이 계산</div>
+      <div class="small">※ Y-Δ 값은 현재 드롭다운 연동됨 / 직입은 데이터 추가 전까지 값이 비어있게 구성</div>
     </div>
   </div>
 
@@ -440,7 +428,15 @@ const MAIN_ORDER = ["50AF","100AF","100AF S타입","200AF","400AF","600/800AF"];
 
 function byId(id){ return document.getElementById(id); }
 
+function openTab(id, btn){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  byId(id).classList.add("active");
+  document.querySelectorAll(".bottomTabs button").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  byId("adminBtn").style.visibility = id === "busbarPage" ? "visible" : "hidden";
+}
 
+// ===== MOTOR =====
 const MOTOR_DB = {
   star: {
     kw: ["5.5","7.5","11","15","18.5","22","30","37","45","55","75","90","110","132","160"],
@@ -451,80 +447,55 @@ const MOTOR_DB = {
     hp: []
   }
 };
-  kw: ["5.5","7.5","11","15","18.5","22","30","37","45","55","75","90","110","132","160"],
-  hp: ["7.5","10","15","20","25","30","40","50","60","75","100","125","150","180","220"]
-};
 
 function initMotorValueOptions(){
-  const mode = byId("motorMode").value;
-  const start = byId("motorStart").value;
-  const select = byId("motorValue");
-  if(!select) return;
-  const prev = select.value;
-  select.innerHTML = "";
-  MOTOR_DB[start][mode].forEach(v=>{
+  const startEl = byId("motorStart");
+  const modeEl = byId("motorMode");
+  const valueEl = byId("motorValue");
+  if(!startEl || !modeEl || !valueEl) return;
+
+  const start = startEl.value;
+  const mode = modeEl.value;
+  const list = (MOTOR_DB[start] && MOTOR_DB[start][mode]) ? MOTOR_DB[start][mode] : [];
+
+  valueEl.innerHTML = "";
+
+  if(!list.length){
+    const o = document.createElement("option");
+    o.value = "";
+    o.textContent = "데이터 없음";
+    valueEl.appendChild(o);
+    return;
+  }
+
+  list.forEach(v=>{
     const o = document.createElement("option");
     o.value = v;
     o.textContent = v;
-    select.appendChild(o);
+    valueEl.appendChild(o);
   });
-  if (MOTOR_VALUES[mode].includes(prev)) {
-    select.value = prev;
-  }
 }
 
-function openTab(id, btn){
-  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-  byId(id).classList.add("active");
-  document.querySelectorAll(".bottomTabs button").forEach(b=>b.classList.remove("active"));
-  btn.classList.add("active");
-  byId("adminBtn").style.visibility = id === "busbarPage" ? "visible" : "hidden";
-}
-
-// ===== MOTOR =====
-function motorCurrentFromMode(){
-  const phase = byId("motorPhase").value;
-  const mode = byId("motorMode").value;
-  const start = byId("motorStart").value;
-  const val = Number((byId("motorValue").value || "").replace(",", "."));
-  if(!isFinite(val) || val <= 0) return null;
-
-  if(mode === "amp") return val;
-
-  const kw = mode === "kw" ? val : val * 0.746;
-  if(phase === "single"){
-    return (1000 * kw) / (220 * 0.90 * 0.85);
-  }
-  return (1000 * kw) / (1.732 * 380 * 0.85 * 0.90);
-}
-function motorEocrModel(i){
-  if(i <= 22) return "GMP22-2P";
-  if(i <= 40) return "GMP40-2P";
-  return "GMP60-3TZ";
-}
-function cableKIV(i){
-  const target = Math.ceil(i * 1.25);
-  const tbl = [
-    {sq:"1.5㎟", A:18},{sq:"2.5㎟", A:24},{sq:"4㎟", A:32},{sq:"6㎟", A:41},
-    {sq:"10㎟", A:57},{sq:"16㎟", A:76},{sq:"25㎟", A:101},{sq:"35㎟", A:125},
-    {sq:"50㎟", A:151},{sq:"70㎟", A:192},{sq:"95㎟", A:232}
-  ];
-  for(const r of tbl){ if(r.A > target) return r.sq; }
-  return tbl[tbl.length-1].sq;
-}
 function calcMotor(){
-  const i = motorCurrentFromMode();
-  if(i == null){
-    byId("motorCurrent").textContent = "값을 입력하세요.";
+  const start = byId("motorStart").value;
+  const mode = byId("motorMode").value;
+  const val = byId("motorValue").value;
+
+  if(!val){
+    byId("motorCurrent").textContent = "데이터 없음";
     byId("motorEocr").textContent = "";
     byId("motorSet").textContent = "";
     byId("motorWire").textContent = "";
     return;
   }
-  byId("motorCurrent").textContent = i.toFixed(1) + " A";
-  byId("motorEocr").textContent = motorEocrModel(i);
-  byId("motorSet").textContent = (i * 1.10).toFixed(1) + " A";
-  byId("motorWire").textContent = cableKIV(i);
+
+  const label = mode === "kw" ? "kW" : "HP";
+  const startLabel = start === "star" ? "Y-Δ" : "직입";
+
+  byId("motorCurrent").textContent = `${startLabel} / ${val} ${label}`;
+  byId("motorEocr").textContent = "데이터 연동 대기";
+  byId("motorSet").textContent = "데이터 연동 대기";
+  byId("motorWire").textContent = "데이터 연동 대기";
 }
 
 // ===== BREAKER =====
@@ -735,6 +706,7 @@ function downloadJSON(){
   setTimeout(()=>URL.revokeObjectURL(a.href), 500);
 }
 
+byId("motorStart").addEventListener("change", initMotorValueOptions);
 byId("motorMode").addEventListener("change", initMotorValueOptions);
 byId("main").addEventListener("change", updateMain);
 byId("branch").addEventListener("change", searchBusbar);
