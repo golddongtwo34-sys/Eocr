@@ -56,6 +56,25 @@ body{
 }
 .page{display:none}
 .page.active{display:block}
+
+.motorSubTabs{display:flex;gap:10px;margin-bottom:14px}
+.motorSubBtn{
+  appearance:none;border:none;border-radius:999px;
+  padding:10px 18px;font-size:16px;font-weight:700;cursor:pointer;
+  background:rgba(255,255,255,.92);color:#2f8cff;
+  box-shadow:0 6px 16px rgba(0,0,0,.18)
+}
+.motorSubBtn.inactive{
+  background:rgba(255,255,255,.92);color:#2f8cff;opacity:.88
+}
+.motorResultBlock{
+  display:grid;grid-template-columns:180px 1fr;gap:8px 14px;line-height:1.7;font-size:15px
+}
+.motorResultLabel{color:rgba(255,255,255,.92)}
+.motorResultValue{white-space:pre-wrap;word-break:break-word}
+@media (max-width:640px){
+  .motorResultBlock{grid-template-columns:140px 1fr;font-size:14px}
+}
 .card{
   background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
   border:1px solid var(--line);
@@ -224,82 +243,62 @@ select:focus,input:focus,textarea:focus{
   </div>
 
   
-  <div id="motorPage" class="page active">
+<div id="motorPage" class="page active">
     <div class="card">
-      <div class="grid">
-        <div class="field wide">
-          <div class="subTabs">
-            <button class="subTabBtn active" id="btnYD" onclick="openMotorSubTab('yd', this)">와이델타</button>
-            <button class="subTabBtn" id="btnDOL" onclick="openMotorSubTab('dol', this)">직입</button>
+      <div class="motorSubTabs">
+        <button id="ydTabBtn" class="motorSubBtn" onclick="setMotorTab('yd')">와이델타</button>
+        <button id="dolTabBtn" class="motorSubBtn inactive" onclick="setMotorTab('dol')">직입</button>
+      </div>
+
+      <div id="ydSection">
+        <div class="grid">
+          <div class="field">
+            <label for="motorVoltage">전압</label>
+            <select id="motorVoltage" onchange="initYdValueOptions()">
+              <option value="220">220~240V</option>
+              <option value="380" selected>380~440V</option>
+              <option value="500">500~550V</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="motorValue">값 선택</label>
+            <select id="motorValue"></select>
+          </div>
+          <div class="field wide">
+            <button class="calcBtn" onclick="renderYdResult()">검색</button>
           </div>
         </div>
 
-        <div id="motorTabYD" class="field wide">
-          <div class="grid">
-            <div class="field">
-              <label for="motorVoltage">전압</label>
-              <select id="motorVoltage" onchange="initMotorValueOptions()">
-                <option value="220">220~240V</option>
-                <option value="380" selected>380~440V</option>
-                <option value="500">500~550V</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="motorValue">값 선택</label>
-              <select id="motorValue"></select>
-            </div>
-            <div class="field wide">
-              <button class="calcBtn" onclick="calcMotor()">검색</button>
-            </div>
+        <div class="result">
+          <div class="resultTitle">모터 계산 결과</div>
+          <div class="motorResultBlock">
+            <div class="motorResultLabel">모터출력</div><div class="motorResultValue" id="motorOutPower"></div>
+            <div class="motorResultLabel">모터전부하전류</div><div class="motorResultValue" id="motorFla"></div>
+            <div class="motorResultLabel">전자접촉기(MCM)</div><div class="motorResultValue" id="motorMcm"></div>
+            <div class="motorResultLabel">정격사용전류(AC3)</div><div class="motorResultValue" id="motorAc3"></div>
+            <div class="motorResultLabel">과부하계전기(TOR)</div><div class="motorResultValue" id="motorTor"></div>
+            <div class="motorResultLabel">TOR 설정범위</div><div class="motorResultValue" id="motorTorRange"></div>
+            <div class="motorResultLabel">시동용접촉기(MCY)</div><div class="motorResultValue" id="motorMcy"></div>
+            <div class="motorResultLabel">운전용접촉기(MCD)</div><div class="motorResultValue" id="motorMcd"></div>
+            <div class="motorResultLabel">배선용 차단기(MCCB)</div><div class="motorResultValue" id="motorMccb"></div>
+            <div class="motorResultLabel">정격전류(AT)</div><div class="motorResultValue" id="motorAt"></div>
           </div>
-
-          <div class="result">
-            <div class="resultTitle">모터 계산 결과</div>
-            <div class="kv">
-              <div class="k">정격전류</div><div class="v" id="motorCurrent"></div>
-              <div class="k">EOCR</div><div class="v" id="motorEocr"></div>
-              <div class="k">세팅값</div><div class="v" id="motorSet"></div>
-              <div class="k">전선SQ</div><div class="v" id="motorWire"></div>
-            </div>
-          </div>
-          <div class="small">※ 드롭다운은 조견표에 있는 값만 표시되며 kW(HP) 형식으로 표시됩니다.</div>
         </div>
+        <div class="small">※ 드롭다운은 조견표에 있는 값만 표시되며 kW(HP) 형식으로 표시됩니다.</div>
+      </div>
 
-        <div id="motorTabDOL" class="field wide hidden">
-          <div class="grid">
-            <div class="field">
-              <label>전압</label>
-              <select disabled>
-                <option>직입 데이터 추가 예정</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>값 선택</label>
-              <select disabled>
-                <option>직입 데이터 추가 예정</option>
-              </select>
-            </div>
-            <div class="field wide">
-              <button class="calcBtn" type="button">검색</button>
-            </div>
-          </div>
-
-          <div class="result">
-            <div class="resultTitle">모터 계산 결과</div>
-            <div class="kv">
-              <div class="k">정격전류</div><div class="v">직입 데이터 준비중</div>
-              <div class="k">EOCR</div><div class="v">-</div>
-              <div class="k">세팅값</div><div class="v">-</div>
-              <div class="k">전선SQ</div><div class="v">-</div>
-            </div>
+      <div id="dolSection" class="hidden">
+        <div class="result">
+          <div class="resultTitle">직입기동</div>
+          <div class="motorResultBlock">
+            <div class="motorResultLabel">상태</div><div class="motorResultValue">데이터 추가 예정</div>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-
-  <div id="breakerPage" class="page">
+<div id="breakerPage" class="page">
     <div class="card">
       <div class="grid">
         <div class="field">
@@ -467,99 +466,108 @@ function openTab(id, btn){
 }
 
 // ===== MOTOR =====
-const MOTOR_YD_DB = {
+const YD_TABLE = {
   "220": [
-    {kw:"5.5", hp:"7.5", current:"20", mcm:"MC-12a,12b", ac3:"13", tor:"MT-32", torSet:"16-22", mcd:"MC-9a,9b", mcs:"MC-12a,12b", mccb:"ABS53c", at:"40"},
-    {kw:"7.5", hp:"10", current:"27", mcm:"MC-18a,18b", ac3:"18", tor:"MT-32", torSet:"22-32", mcd:"MC-9a,9b", mcs:"MC-18a,18b", mccb:"ABS53c", at:"50"},
-    {kw:"11", hp:"15", current:"38", mcm:"MC-22b", ac3:"22", tor:"MT-32", torSet:"28-40", mcd:"MC-12a,12b", mcs:"MC-22b", mccb:"ABS103c", at:"75"},
-    {kw:"15", hp:"20", current:"51", mcm:"MC-32a", ac3:"32", tor:"MT-63", torSet:"45-65", mcd:"MC-18a,18b", mcs:"MC-32a", mccb:"ABS103c", at:"100"},
-    {kw:"18.5", hp:"25", current:"61", mcm:"MC-40a", ac3:"40", tor:"MT-63", torSet:"45-65", mcd:"MC-22b", mcs:"MC-40a", mccb:"ABS103c", at:"125"},
-    {kw:"22", hp:"30", current:"72", mcm:"MC-50a", ac3:"55", tor:"MT-95", torSet:"63-85", mcd:"MC-32a", mcs:"MC-50a", mccb:"ABS203c", at:"150"},
-    {kw:"30", hp:"40", current:"96", mcm:"MC-65a", ac3:"65", tor:"MT-95", torSet:"80-100", mcd:"MC-32a", mcs:"MC-65a", mccb:"ABS203c", at:"175"},
-    {kw:"37", hp:"50", current:"115", mcm:"MC-75a", ac3:"75", tor:"MT-150", torSet:"95-130", mcd:"MC-40a", mcs:"MC-75a", mccb:"ABS203c", at:"200"},
-    {kw:"45", hp:"60", current:"140", mcm:"MC-85a", ac3:"85", tor:"MT-150", torSet:"110-150", mcd:"MC-50a", mcs:"MC-85a", mccb:"ABS403c", at:"300"},
-    {kw:"55", hp:"75", current:"169", mcm:"MC-100a", ac3:"105", tor:"MT-225", torSet:"120-185", mcd:"MC-65a", mcs:"MC-100a", mccb:"ABS403c", at:"400"},
-    {kw:"75", hp:"100", current:"230", mcm:"MC-150a", ac3:"150", tor:"MT-400", torSet:"160-240", mcd:"MC-85a", mcs:"MC-150a", mccb:"ABS603c", at:"500"},
-    {kw:"90", hp:"125", current:"278", mcm:"MC-185a", ac3:"185", tor:"MT-400", torSet:"200-330", mcd:"MC-100a", mcs:"MC-185a", mccb:"ABS603c", at:"600"},
-    {kw:"110", hp:"150", current:"340", mcm:"MC-225a", ac3:"225", tor:"MT-400", torSet:"260-400", mcd:"MC-130a", mcs:"MC-225a", mccb:"ABS803c", at:"800"},
-    {kw:"132", hp:"180", current:"-", mcm:"-", ac3:"-", tor:"-", torSet:"-", mcd:"-", mcs:"-", mccb:"-", at:"-"},
-    {kw:"160", hp:"220", current:"-", mcm:"-", ac3:"-", tor:"-", torSet:"-", mcd:"-", mcs:"-", mccb:"-", at:"-"}
+    {kw:"5.5", hp:"7.5", fla:"20 A", mcm:"MC-12a,12b", ac3:"13 A", tor:"MT-32", torRange:"16-22 A", mcy:"MC-9a,9b", mcd:"MC-12a,12b", mccb:"ABS53c", at:"40 A"},
+    {kw:"7.5", hp:"10", fla:"27 A", mcm:"MC-18a,18b", ac3:"18 A", tor:"MT-32", torRange:"22-32 A", mcy:"MC-9a,9b", mcd:"MC-18a,18b", mccb:"ABS53c", at:"50 A"},
+    {kw:"11", hp:"15", fla:"38 A", mcm:"MC-22b", ac3:"22 A", tor:"MT-32", torRange:"28-40 A", mcy:"MC-12a,12b", mcd:"MC-22b", mccb:"ABS103c", at:"75 A"},
+    {kw:"15", hp:"20", fla:"51 A", mcm:"MC-32a", ac3:"32 A", tor:"MT-63", torRange:"45-65 A", mcy:"MC-18a,18b", mcd:"MC-32a", mccb:"ABS103c", at:"100 A"},
+    {kw:"18.5", hp:"25", fla:"61 A", mcm:"MC-40a", ac3:"40 A", tor:"MT-63", torRange:"45-65 A", mcy:"MC-22b", mcd:"MC-40a", mccb:"ABS103c", at:"125 A"},
+    {kw:"22", hp:"30", fla:"72 A", mcm:"MC-50a", ac3:"55 A", tor:"MT-95", torRange:"63-85 A", mcy:"MC-32a", mcd:"MC-50a", mccb:"ABS203c", at:"150 A"},
+    {kw:"30", hp:"40", fla:"96 A", mcm:"MC-65a", ac3:"65 A", tor:"MT-95", torRange:"80-100 A", mcy:"MC-32a", mcd:"MC-65a", mccb:"ABS203c", at:"175 A"},
+    {kw:"37", hp:"50", fla:"115 A", mcm:"MC-75a", ac3:"75 A", tor:"MT-150", torRange:"95-130 A", mcy:"MC-40a", mcd:"MC-75a", mccb:"ABS203c", at:"200 A"},
+    {kw:"45", hp:"60", fla:"140 A", mcm:"MC-85a", ac3:"85 A", tor:"MT-150", torRange:"110-150 A", mcy:"MC-50a", mcd:"MC-85a", mccb:"ABS403c", at:"300 A"},
+    {kw:"55", hp:"75", fla:"169 A", mcm:"MC-100a", ac3:"105 A", tor:"MT-225", torRange:"120-185 A", mcy:"MC-65a", mcd:"MC-100a", mccb:"ABS403c", at:"400 A"},
+    {kw:"75", hp:"100", fla:"230 A", mcm:"MC-150a", ac3:"150 A", tor:"MT-400", torRange:"160-240 A", mcy:"MC-85a", mcd:"MC-150a", mccb:"ABS603c", at:"500 A"},
+    {kw:"90", hp:"125", fla:"278 A", mcm:"MC-185a", ac3:"185 A", tor:"MT-400", torRange:"200-330 A", mcy:"MC-100a", mcd:"MC-185a", mccb:"ABS603c", at:"600 A"},
+    {kw:"110", hp:"150", fla:"340 A", mcm:"MC-225a", ac3:"225 A", tor:"MT-400", torRange:"260-400 A", mcy:"MC-130a", mcd:"MC-225a", mccb:"ABS603c", at:"800 A"},
+    {kw:"132", hp:"180", fla:"-", mcm:"-", ac3:"-", tor:"-", torRange:"-", mcy:"-", mcd:"-", mccb:"-", at:"-"},
+    {kw:"160", hp:"220", fla:"-", mcm:"-", ac3:"-", tor:"-", torRange:"-", mcy:"-", mcd:"-", mccb:"-", at:"-"}
   ],
   "380": [
-    {kw:"5.5", hp:"7.5", current:"11.5", mcm:"MC-9a,9b", ac3:"9", tor:"MT-12,32", torSet:"9-13", mcd:"MC-9a,9b", mcs:"MC-9a,9b", mccb:"ABS33c", at:"30"},
-    {kw:"7.5", hp:"10", current:"15.5", mcm:"MC-9a,9b", ac3:"9", tor:"MT-12,32", torSet:"12-18", mcd:"MC-9a,9b", mcs:"MC-9a,9b", mccb:"ABS33c", at:"30"},
-    {kw:"11", hp:"15", current:"22", mcm:"MC-18a,18b", ac3:"18", tor:"MT-32", torSet:"18-25", mcd:"MC-9a,9b", mcs:"MC-18a,18b", mccb:"ABS53c", at:"40"},
-    {kw:"15", hp:"20", current:"29", mcm:"MC-18a,18b", ac3:"18", tor:"MT-32", torSet:"22-32", mcd:"MC-12a,12b", mcs:"MC-18a,18b", mccb:"ABS63c", at:"60"},
-    {kw:"18.5", hp:"25", current:"35", mcm:"MC-22b", ac3:"22", tor:"MT-32", torSet:"28-40", mcd:"MC-12a,12b", mcs:"MC-22b", mccb:"ABS103c", at:"75"},
-    {kw:"22", hp:"30", current:"41", mcm:"MC-32a", ac3:"32", tor:"MT-63", torSet:"34-50", mcd:"MC-18a,18b", mcs:"MC-32a", mccb:"ABS103c", at:"75"},
-    {kw:"30", hp:"40", current:"55", mcm:"MC-32a", ac3:"30", tor:"MT-63", torSet:"45-65", mcd:"MC-22b", mcs:"MC-32a", mccb:"ABS103c", at:"100"},
-    {kw:"37", hp:"50", current:"66", mcm:"MC-40a", ac3:"40", tor:"MT-95", torSet:"54-75", mcd:"MC-22b", mcs:"MC-40a", mccb:"ABS103c", at:"125"},
-    {kw:"45", hp:"60", current:"80", mcm:"MC-50a", ac3:"50", tor:"MT-95", torSet:"70-95", mcd:"MC-32a", mcs:"MC-50a", mccb:"ABS203c", at:"150"},
-    {kw:"55", hp:"75", current:"97", mcm:"MC-65a", ac3:"65", tor:"MT-95", torSet:"80-100", mcd:"MC-40a", mcs:"MC-65a", mccb:"ABS203c", at:"175"},
-    {kw:"75", hp:"100", current:"132", mcm:"MC-85a", ac3:"85", tor:"MT-150", torSet:"110-150", mcd:"MC-50a", mcs:"MC-85a", mccb:"ABS203c", at:"250"},
-    {kw:"90", hp:"125", current:"160", mcm:"MC-100a", ac3:"105", tor:"MT-225", torSet:"120-185", mcd:"MC-65a", mcs:"MC-100a", mccb:"ABS403c", at:"350"},
-    {kw:"110", hp:"150", current:"195", mcm:"MC-130a", ac3:"130", tor:"MT-225", torSet:"160-240", mcd:"MC-65a", mcs:"MC-130a", mccb:"ABS603c", at:"500"},
-    {kw:"132", hp:"180", current:"230", mcm:"MC-150a", ac3:"150", tor:"MT-400", torSet:"160-240", mcd:"MC-85a", mcs:"MC-150a", mccb:"ABS603c", at:"500"},
-    {kw:"160", hp:"220", current:"280", mcm:"MC-185a", ac3:"185", tor:"MT-400", torSet:"200-330", mcd:"MC-100a", mcs:"MC-185a", mccb:"ABS603c", at:"600"}
+    {kw:"5.5", hp:"7.5", fla:"11.5 A", mcm:"MC-9a,9b", ac3:"9 A", tor:"MT-12,32", torRange:"9-13 A", mcy:"MC-9a,9b", mcd:"MC-9a,9b", mccb:"ABS33c", at:"30 A"},
+    {kw:"7.5", hp:"10", fla:"15.5 A", mcm:"MC-9a,9b", ac3:"9 A", tor:"MT-12,32", torRange:"12-18 A", mcy:"MC-9a,9b", mcd:"MC-9a,9b", mccb:"ABS33c", at:"30 A"},
+    {kw:"11", hp:"15", fla:"22 A", mcm:"MC-18a,18b", ac3:"18 A", tor:"MT-32", torRange:"18-25 A", mcy:"MC-9a,9b", mcd:"MC-18a,18b", mccb:"ABS53c", at:"40 A"},
+    {kw:"15", hp:"20", fla:"29 A", mcm:"MC-18a,18b", ac3:"18 A", tor:"MT-32", torRange:"22-32 A", mcy:"MC-12a,12b", mcd:"MC-18a,18b", mccb:"ABS63c", at:"60 A"},
+    {kw:"18.5", hp:"25", fla:"35 A", mcm:"MC-22b", ac3:"22 A", tor:"MT-32", torRange:"28-40 A", mcy:"MC-12a,12b", mcd:"MC-22b", mccb:"ABS103c", at:"75 A"},
+    {kw:"22", hp:"30", fla:"41 A", mcm:"MC-32a", ac3:"32 A", tor:"MT-63", torRange:"34-50 A", mcy:"MC-18a,18b", mcd:"MC-32a", mccb:"ABS103c", at:"75 A"},
+    {kw:"30", hp:"40", fla:"55 A", mcm:"MC-32a", ac3:"30 A", tor:"MT-63", torRange:"45-65 A", mcy:"MC-22b", mcd:"MC-32a", mccb:"ABS103c", at:"100 A"},
+    {kw:"37", hp:"50", fla:"66 A", mcm:"MC-40a", ac3:"40 A", tor:"MT-95", torRange:"54-75 A", mcy:"MC-22b", mcd:"MC-40a", mccb:"ABS103c", at:"125 A"},
+    {kw:"45", hp:"60", fla:"80 A", mcm:"MC-50a", ac3:"50 A", tor:"MT-95", torRange:"70-95 A", mcy:"MC-32a", mcd:"MC-50a", mccb:"ABS203c", at:"150 A"},
+    {kw:"55", hp:"75", fla:"97 A", mcm:"MC-65a", ac3:"65 A", tor:"MT-95", torRange:"80-100 A", mcy:"MC-40a", mcd:"MC-65a", mccb:"ABS203c", at:"175 A"},
+    {kw:"75", hp:"100", fla:"132 A", mcm:"MC-85a", ac3:"85 A", tor:"MT-150", torRange:"110-150 A", mcy:"MC-50a", mcd:"MC-85a", mccb:"ABS203c", at:"250 A"},
+    {kw:"90", hp:"125", fla:"160 A", mcm:"MC-100a", ac3:"105 A", tor:"MT-225", torRange:"120-185 A", mcy:"MC-65a", mcd:"MC-100a", mccb:"ABS403c", at:"350 A"},
+    {kw:"110", hp:"150", fla:"195 A", mcm:"MC-130a", ac3:"130 A", tor:"MT-225", torRange:"160-240 A", mcy:"MC-65a", mcd:"MC-130a", mccb:"ABS603c", at:"500 A"},
+    {kw:"132", hp:"180", fla:"230 A", mcm:"MC-150a", ac3:"150 A", tor:"MT-400", torRange:"160-240 A", mcy:"MC-85a", mcd:"MC-150a", mccb:"ABS603c", at:"500 A"},
+    {kw:"160", hp:"220", fla:"280 A", mcm:"MC-185a", ac3:"185 A", tor:"MT-400", torRange:"200-330 A", mcy:"MC-100a", mcd:"MC-185a", mccb:"ABS603c", at:"600 A"}
   ],
   "500": [
-    {kw:"5.5", hp:"7.5", current:"9.2", mcm:"MC-9a,9b", ac3:"7", tor:"MT-12,32", torSet:"7-10", mcd:"MC-9a,9b", mcs:"MC-9a,9b", mccb:"ABS33c", at:"20"},
-    {kw:"7.5", hp:"10", current:"12.4", mcm:"MC-12a,12b", ac3:"12", tor:"MT-12,32", torSet:"9-13", mcd:"MC-9a,9b", mcs:"MC-12a,12b", mccb:"ABS53c", at:"30"},
-    {kw:"11", hp:"15", current:"17.6", mcm:"MC-12a,12b", ac3:"12", tor:"MT-32", torSet:"12-18", mcd:"MC-9a,9b", mcs:"MC-12a,12b", mccb:"ABS53c", at:"40"},
-    {kw:"15", hp:"20", current:"23", mcm:"MC-22b", ac3:"20", tor:"MT-32", torSet:"18-25", mcd:"MC-12a,12b", mcs:"MC-22b", mccb:"ABS53c", at:"50"},
-    {kw:"18.5", hp:"25", current:"28", mcm:"MC-22b", ac3:"20", tor:"MT-32", torSet:"22-32", mcd:"MC-12a,12b", mcs:"MC-22b", mccb:"ABS63c", at:"60"},
-    {kw:"22", hp:"30", current:"33", mcm:"MC-22b", ac3:"20", tor:"MT-63", torSet:"28-40", mcd:"MC-12a,12b", mcs:"MC-22b", mccb:"ABS103c", at:"75"},
-    {kw:"30", hp:"40", current:"44", mcm:"MC-32a", ac3:"28", tor:"MT-63", torSet:"34-50", mcd:"MC-22b", mcs:"MC-32a", mccb:"ABS103c", at:"100"},
-    {kw:"37", hp:"50", current:"53", mcm:"MC-40a", ac3:"32", tor:"MT-63", torSet:"45-65", mcd:"MC-22b", mcs:"MC-40a", mccb:"ABS103c", at:"100"},
-    {kw:"45", hp:"60", current:"64", mcm:"MC-50a", ac3:"43", tor:"MT-95", torSet:"54-75", mcd:"MC-32a", mcs:"MC-50a", mccb:"ABS103c", at:"125"},
-    {kw:"55", hp:"75", current:"78", mcm:"MC-65a", ac3:"60", tor:"MT-95", torSet:"63-85", mcd:"MC-32a", mcs:"MC-65a", mccb:"ABS203c", at:"150"},
-    {kw:"75", hp:"100", current:"106", mcm:"MC-75a", ac3:"75", tor:"MT-225", torSet:"85-125", mcd:"MC-50a", mcs:"MC-75a", mccb:"ABS203c", at:"200"},
-    {kw:"90", hp:"125", current:"128", mcm:"MC-85a", ac3:"75", tor:"MT-225", torSet:"100-160", mcd:"MC-50a", mcs:"MC-85a", mccb:"ABS203c", at:"250"},
-    {kw:"110", hp:"150", current:"156", mcm:"MC-150a", ac3:"100", tor:"MT-225", torSet:"120-185", mcd:"MC-65a", mcs:"MC-150a", mccb:"ABS403c", at:"350"},
-    {kw:"132", hp:"180", current:"184", mcm:"MC-185a", ac3:"180", tor:"MT-225", torSet:"120-185", mcd:"MC-75a", mcs:"MC-185a", mccb:"ABS403c", at:"400"},
-    {kw:"160", hp:"220", current:"224", mcm:"MC-185a", ac3:"180", tor:"MT-400", torSet:"160-240", mcd:"MC-85a", mcs:"MC-185a", mccb:"ABS603c", at:"500"}
+    {kw:"5.5", hp:"7.5", fla:"9.2 A", mcm:"MC-9a,9b", ac3:"7 A", tor:"MT-12,32", torRange:"7-10 A", mcy:"MC-9a,9b", mcd:"MC-9a,9b", mccb:"ABS33c", at:"20 A"},
+    {kw:"7.5", hp:"10", fla:"12.4 A", mcm:"MC-12a,12b", ac3:"12 A", tor:"MT-12,32", torRange:"9-13 A", mcy:"MC-9a,9b", mcd:"MC-12a,12b", mccb:"ABS53c", at:"30 A"},
+    {kw:"11", hp:"15", fla:"17.6 A", mcm:"MC-12a,12b", ac3:"12 A", tor:"MT-32", torRange:"12-18 A", mcy:"MC-9a,9b", mcd:"MC-12a,12b", mccb:"ABS53c", at:"40 A"},
+    {kw:"15", hp:"20", fla:"23 A", mcm:"MC-22b", ac3:"20 A", tor:"MT-32", torRange:"18-25 A", mcy:"MC-12a,12b", mcd:"MC-22b", mccb:"ABS53c", at:"50 A"},
+    {kw:"18.5", hp:"25", fla:"28 A", mcm:"MC-22b", ac3:"20 A", tor:"MT-32", torRange:"22-32 A", mcy:"MC-12a,12b", mcd:"MC-22b", mccb:"ABS63c", at:"60 A"},
+    {kw:"22", hp:"30", fla:"33 A", mcm:"MC-22b", ac3:"20 A", tor:"MT-63", torRange:"28-40 A", mcy:"MC-12a,12b", mcd:"MC-22b", mccb:"ABS103c", at:"75 A"},
+    {kw:"30", hp:"40", fla:"44 A", mcm:"MC-32a", ac3:"28 A", tor:"MT-63", torRange:"34-50 A", mcy:"MC-22b", mcd:"MC-32a", mccb:"ABS103c", at:"100 A"},
+    {kw:"37", hp:"50", fla:"53 A", mcm:"MC-40a", ac3:"32 A", tor:"MT-63", torRange:"45-65 A", mcy:"MC-22b", mcd:"MC-40a", mccb:"ABS103c", at:"100 A"},
+    {kw:"45", hp:"60", fla:"64 A", mcm:"MC-50a", ac3:"43 A", tor:"MT-95", torRange:"54-75 A", mcy:"MC-32a", mcd:"MC-50a", mccb:"ABS103c", at:"125 A"},
+    {kw:"55", hp:"75", fla:"78 A", mcm:"MC-65a", ac3:"60 A", tor:"MT-95", torRange:"63-85 A", mcy:"MC-32a", mcd:"MC-65a", mccb:"ABS203c", at:"150 A"},
+    {kw:"75", hp:"100", fla:"106 A", mcm:"MC-75a", ac3:"75 A", tor:"MT-225", torRange:"85-125 A", mcy:"MC-50a", mcd:"MC-75a", mccb:"ABS203c", at:"200 A"},
+    {kw:"90", hp:"125", fla:"128 A", mcm:"MC-85a", ac3:"75 A", tor:"MT-225", torRange:"100-160 A", mcy:"MC-50a", mcd:"MC-85a", mccb:"ABS203c", at:"250 A"},
+    {kw:"110", hp:"150", fla:"156 A", mcm:"MC-150a", ac3:"100 A", tor:"MT-225", torRange:"120-185 A", mcy:"MC-65a", mcd:"MC-150a", mccb:"ABS403c", at:"350 A"},
+    {kw:"132", hp:"180", fla:"184 A", mcm:"MC-185a", ac3:"180 A", tor:"MT-225", torRange:"120-185 A", mcy:"MC-75a", mcd:"MC-185a", mccb:"ABS403c", at:"400 A"},
+    {kw:"160", hp:"220", fla:"224 A", mcm:"MC-185a", ac3:"180 A", tor:"MT-400", torRange:"160-240 A", mcy:"MC-85a", mcd:"MC-185a", mccb:"ABS603c", at:"500 A"}
   ]
 };
 
-function openMotorSubTab(type, btn){
-  byId("motorTabYD").classList.toggle("hidden", type !== "yd");
-  byId("motorTabDOL").classList.toggle("hidden", type !== "dol");
-  document.querySelectorAll(".subTabBtn").forEach(b=>b.classList.remove("active"));
-  btn.classList.add("active");
+function setMotorTab(tab){
+  const yd = byId("ydSection");
+  const dol = byId("dolSection");
+  const ydBtn = byId("ydTabBtn");
+  const dolBtn = byId("dolTabBtn");
+  if(tab === "yd"){
+    yd.classList.remove("hidden");
+    dol.classList.add("hidden");
+    ydBtn.classList.remove("inactive");
+    dolBtn.classList.add("inactive");
+  }else{
+    yd.classList.add("hidden");
+    dol.classList.remove("hidden");
+    ydBtn.classList.add("inactive");
+    dolBtn.classList.remove("inactive");
+  }
 }
 
-function initMotorValueOptions(){
-  const valueEl = byId("motorValue");
-  if(!valueEl) return;
+function initYdValueOptions(){
   const voltage = byId("motorVoltage").value;
-  const list = MOTOR_YD_DB[voltage] || [];
+  const valueEl = byId("motorValue");
+  const rows = YD_TABLE[voltage] || [];
   valueEl.innerHTML = "";
-  list.forEach((row, idx)=>{
+  rows.forEach((row, idx)=>{
     const o = document.createElement("option");
     o.value = String(idx);
     o.textContent = `${row.kw} (${row.hp})`;
     valueEl.appendChild(o);
   });
-  calcMotor();
+  renderYdResult();
 }
 
-function calcMotor(){
+function renderYdResult(){
   const voltage = byId("motorVoltage").value;
   const idx = Number(byId("motorValue").value || 0);
-  const row = (MOTOR_YD_DB[voltage] || [])[idx];
+  const row = (YD_TABLE[voltage] || [])[idx];
+  if(!row) return;
 
-  if(!row){
-    byId("motorCurrent").textContent = "데이터 없음";
-    byId("motorEocr").textContent = "";
-    byId("motorSet").textContent = "";
-    byId("motorWire").textContent = "";
-    return;
-  }
-
-  byId("motorCurrent").textContent = `${row.current} A`;
-  byId("motorEocr").textContent = `MCM ${row.mcm} / AC3 ${row.ac3} A`;
-  byId("motorSet").textContent = `TOR ${row.tor} / ${row.torSet}`;
-  byId("motorWire").textContent = `MCD ${row.mcd} / MCS ${row.mcs} / MCCB ${row.mccb} / AT ${row.at}`;
+  byId("motorOutPower").textContent = `${row.kw} kW (${row.hp} HP)`;
+  byId("motorFla").textContent = row.fla;
+  byId("motorMcm").textContent = row.mcm;
+  byId("motorAc3").textContent = row.ac3;
+  byId("motorTor").textContent = row.tor;
+  byId("motorTorRange").textContent = row.torRange;
+  byId("motorMcy").textContent = row.mcy;
+  byId("motorMcd").textContent = row.mcd;
+  byId("motorMccb").textContent = row.mccb;
+  byId("motorAt").textContent = row.at;
 }
 
 // ===== BREAKER =====
@@ -782,7 +790,7 @@ fetch("busbarDB.json")
   })
   .then(d => {
     BUSBAR_DB = d;
-    initMotorValueOptions();
+    initYdValueOptions();
     initMain();
     renderTree();
     byId("adminBtn").style.visibility = "hidden";
