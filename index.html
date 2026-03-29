@@ -546,7 +546,7 @@ function initYdValueOptions(){
   rows.forEach((row, idx)=>{
     const o = document.createElement("option");
     o.value = String(idx);
-    o.textContent = `${row.kw} (${row.hp})`;
+    o.textContent = `${row.kw} kW (${row.hp} HP)`;
     valueEl.appendChild(o);
   });
   renderYdResult();
@@ -783,6 +783,7 @@ byId("branch").addEventListener("change", searchBusbar);
 byId("line").addEventListener("change", updateType);
 byId("type").addEventListener("change", searchBusbar);
 
+initYdValueOptions();
 fetch("busbarDB.json")
   .then(r => {
     if(!r.ok) throw new Error("busbarDB.json 로드 실패");
