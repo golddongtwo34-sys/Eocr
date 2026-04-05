@@ -312,13 +312,13 @@ select:focus,input:focus,textarea:focus{
         <div class="result">
           <div class="resultTitle">직입기동 결과</div>
           <div class="motorResultBlock">
-            <div class="motorResultLabel">모터출력</div><div class="motorResultValue" id="dolOutPower"></div>
-            <div class="motorResultLabel">정격전류</div><div class="motorResultValue" id="dolCurrent"></div>
-            <div class="motorResultLabel">전자개폐기(MC)</div><div class="motorResultValue" id="dolMc"></div>
-            <div class="motorResultLabel">정격전류(AT)</div><div class="motorResultValue" id="dolAt"></div>
+            <div class="motorResultLabel">모터전부하전류</div><div class="motorResultValue" id="dolFla"></div>
+            <div class="motorResultLabel">전자개폐기(MSM)</div><div class="motorResultValue" id="dolMc"></div>
+            <div class="motorResultLabel">정격사용전류(AC3)</div><div class="motorResultValue" id="dolAc3"></div>
             <div class="motorResultLabel">과부하계전기(TOR)</div><div class="motorResultValue" id="dolTor"></div>
             <div class="motorResultLabel">TOR 설정범위</div><div class="motorResultValue" id="dolTorRange"></div>
             <div class="motorResultLabel">배선용 차단기(MCCB)</div><div class="motorResultValue" id="dolMccb"></div>
+            <div class="motorResultLabel">정격전류(AT)</div><div class="motorResultValue" id="dolAt"></div>
           </div>
         </div>
         <div class="small">※ 전압을 먼저 선택하면 조견표 기준 kW(HP) 드롭다운이 활성화됩니다.</div>
@@ -601,94 +601,94 @@ function renderYdResult(){
 
 const DOL_TABLE = {
   "220": [
-    {kw:"0.12", hp:"1/6", current:"0.7 A", mc:"MC-9a,9b", at:"11 A", tor:"MT-12,32", torRange:"0.63-1", mccb:"ABS33c"},
-    {kw:"0.18", hp:"1/4", current:"1.0 A", mc:"MC-9a,9b", at:"11 A", tor:"MT-12,32", torRange:"0.63-1", mccb:"ABS33c"},
-    {kw:"0.25", hp:"1/3", current:"1.5 A", mc:"MC-9a,9b", at:"11 A", tor:"MT-12,32", torRange:"1-1.6", mccb:"ABS33c"},
-    {kw:"0.37", hp:"1/2", current:"1.9 A", mc:"MC-9a,9b", at:"11 A", tor:"MT-12,32", torRange:"1.6-2.5", mccb:"ABS33c"},
-    {kw:"0.55", hp:"3/4", current:"2.6 A", mc:"MC-9a,9b", at:"11 A", tor:"MT-12,32", torRange:"2.5-4", mccb:"ABS33c"},
-    {kw:"0.75", hp:"1", current:"3.3 A", mc:"MC-9a,9b", at:"11 A", tor:"MT-12,32", torRange:"2.5-4", mccb:"ABS33c"},
-    {kw:"1.1", hp:"1.5", current:"4.7 A", mc:"MC-9a,9b", at:"11 A", tor:"MT-12,32", torRange:"4-6", mccb:"ABS33c"},
-    {kw:"1.5", hp:"2", current:"6.3 A", mc:"MC-9a,9b", at:"11 A", tor:"MT-12,32", torRange:"5-8", mccb:"ABS33c"},
-    {kw:"2.2", hp:"3", current:"8.5 A", mc:"MC-9a,9b", at:"11 A", tor:"MT-12,32", torRange:"6-9", mccb:"ABS33c"},
-    {kw:"3", hp:"4", current:"11.3 A", mc:"MC-12a,12b", at:"13 A", tor:"MT-12,32", torRange:"9-13", mccb:"ABS33c"},
-    {kw:"4", hp:"5.5", current:"15 A", mc:"MC-18a,18b", at:"18 A", tor:"MT-12,32", torRange:"12-18", mccb:"ABS33c"},
-    {kw:"5.5", hp:"7.5", current:"20 A", mc:"MC-22b", at:"22 A", tor:"MT-32", torRange:"16-22", mccb:"ABS53c"},
-    {kw:"7.5", hp:"10", current:"27 A", mc:"MC-32a", at:"32 A", tor:"MT-32", torRange:"22-32", mccb:"ABS53c"},
-    {kw:"11", hp:"15", current:"38 A", mc:"MC-40a", at:"40 A", tor:"MT-32", torRange:"28-40", mccb:"ABS103c"},
-    {kw:"15", hp:"20", current:"51 A", mc:"MC-50a", at:"55 A", tor:"MT-63", torRange:"45-65", mccb:"ABS103c"},
-    {kw:"18.5", hp:"25", current:"61 A", mc:"MC-65a", at:"65 A", tor:"MT-63", torRange:"45-65", mccb:"ABS103c"},
-    {kw:"22", hp:"30", current:"72 A", mc:"MC-75a", at:"75 A", tor:"MT-95", torRange:"63-85", mccb:"ABS203c"},
-    {kw:"30", hp:"40", current:"96 A", mc:"MC-100a", at:"105 A", tor:"MT-95", torRange:"80-100", mccb:"ABS203c"},
-    {kw:"37", hp:"50", current:"115 A", mc:"MC-130a", at:"130 A", tor:"MT-150", torRange:"95-130", mccb:"ABS203c"},
-    {kw:"45", hp:"60", current:"140 A", mc:"MC-150a", at:"150 A", tor:"MT-150", torRange:"110-150", mccb:"ABS403c"},
-    {kw:"55", hp:"75", current:"169 A", mc:"MC-185a", at:"185 A", tor:"MT-225", torRange:"120-185", mccb:"ABS403c"},
-    {kw:"75", hp:"100", current:"230 A", mc:"MC-265a", at:"265 A", tor:"MT-400", torRange:"160-240", mccb:"ABS603c"},
-    {kw:"90", hp:"125", current:"278 A", mc:"MC-330a", at:"330 A", tor:"MT-400", torRange:"200-330", mccb:"ABS603c"},
-    {kw:"110", hp:"150", current:"340 A", mc:"MC-400a", at:"400 A", tor:"MT-400", torRange:"260-400", mccb:"ABS803c"},
-    {kw:"132", hp:"180", current:"400 A", mc:"MC-400a", at:"400 A", tor:"MT-400", torRange:"260-400", mccb:"ABS803c"},
-    {kw:"160", hp:"220", current:"-", mc:"-", at:"-", tor:"-", torRange:"-", mccb:"-"},
-    {kw:"200", hp:"270", current:"-", mc:"-", at:"-", tor:"-", torRange:"-", mccb:"-"},
-    {kw:"250", hp:"340", current:"-", mc:"-", at:"-", tor:"-", torRange:"-", mccb:"-"}
+    {kw:"0.12", hp:"1/6", fla:"0.7 A", mc:"MC-9a,9b", ac3:"11 A", tor:"MT-12,32", torRange:"0.63-1 A", mccb:"ABS33c", at:"3 A"},
+    {kw:"0.18", hp:"1/4", fla:"1.0 A", mc:"MC-9a,9b", ac3:"11 A", tor:"MT-12,32", torRange:"0.63-1 A", mccb:"ABS33c", at:"3 A"},
+    {kw:"0.25", hp:"1/3", fla:"1.5 A", mc:"MC-9a,9b", ac3:"11 A", tor:"MT-12,32", torRange:"1-1.6 A", mccb:"ABS33c", at:"3 A"},
+    {kw:"0.37", hp:"1/2", fla:"1.9 A", mc:"MC-9a,9b", ac3:"11 A", tor:"MT-12,32", torRange:"1.6-2.5 A", mccb:"ABS33c", at:"5 A"},
+    {kw:"0.55", hp:"3/4", fla:"2.6 A", mc:"MC-9a,9b", ac3:"11 A", tor:"MT-12,32", torRange:"2.5-4 A", mccb:"ABS33c", at:"10 A"},
+    {kw:"0.75", hp:"1", fla:"3.3 A", mc:"MC-9a,9b", ac3:"11 A", tor:"MT-12,32", torRange:"2.5-4 A", mccb:"ABS33c", at:"10 A"},
+    {kw:"1.1", hp:"1.5", fla:"4.7 A", mc:"MC-9a,9b", ac3:"11 A", tor:"MT-12,32", torRange:"4-6 A", mccb:"ABS33c", at:"10 A"},
+    {kw:"1.5", hp:"2", fla:"6.3 A", mc:"MC-9a,9b", ac3:"11 A", tor:"MT-12,32", torRange:"5-8 A", mccb:"ABS33c", at:"15 A"},
+    {kw:"2.2", hp:"3", fla:"8.5 A", mc:"MC-9a,9b", ac3:"11 A", tor:"MT-12,32", torRange:"6-9 A", mccb:"ABS33c", at:"20 A"},
+    {kw:"3", hp:"4", fla:"11.3 A", mc:"MC-12a,12b", ac3:"13 A", tor:"MT-12,32", torRange:"9-13 A", mccb:"ABS33c", at:"30 A"},
+    {kw:"4", hp:"5.5", fla:"15 A", mc:"MC-18a,18b", ac3:"18 A", tor:"MT-12,32", torRange:"12-18 A", mccb:"ABS33c", at:"30 A"},
+    {kw:"5.5", hp:"7.5", fla:"20 A", mc:"MC-22b", ac3:"22 A", tor:"MT-32", torRange:"16-22 A", mccb:"ABS53c", at:"40 A"},
+    {kw:"7.5", hp:"10", fla:"27 A", mc:"MC-32a", ac3:"32 A", tor:"MT-32", torRange:"22-32 A", mccb:"ABS53c", at:"50 A"},
+    {kw:"11", hp:"15", fla:"38 A", mc:"MC-40a", ac3:"40 A", tor:"MT-32", torRange:"28-40 A", mccb:"ABS103c", at:"75 A"},
+    {kw:"15", hp:"20", fla:"51 A", mc:"MC-50a", ac3:"55 A", tor:"MT-63", torRange:"45-65 A", mccb:"ABS103c", at:"100 A"},
+    {kw:"18.5", hp:"25", fla:"61 A", mc:"MC-65a", ac3:"65 A", tor:"MT-63", torRange:"45-65 A", mccb:"ABS103c", at:"125 A"},
+    {kw:"22", hp:"30", fla:"72 A", mc:"MC-75a", ac3:"75 A", tor:"MT-95", torRange:"63-85 A", mccb:"ABS203c", at:"150 A"},
+    {kw:"30", hp:"40", fla:"96 A", mc:"MC-100a", ac3:"105 A", tor:"MT-95", torRange:"80-100 A", mccb:"ABS203c", at:"175 A"},
+    {kw:"37", hp:"50", fla:"115 A", mc:"MC-130a", ac3:"130 A", tor:"MT-150", torRange:"95-130 A", mccb:"ABS203c", at:"200 A"},
+    {kw:"45", hp:"60", fla:"140 A", mc:"MC-150a", ac3:"150 A", tor:"MT-150", torRange:"110-150 A", mccb:"ABS403c", at:"300 A"},
+    {kw:"55", hp:"75", fla:"169 A", mc:"MC-185a", ac3:"185 A", tor:"MT-225", torRange:"120-185 A", mccb:"ABS403c", at:"350 A"},
+    {kw:"75", hp:"100", fla:"230 A", mc:"MC-265a", ac3:"265 A", tor:"MT-400", torRange:"160-240 A", mccb:"ABS603c", at:"500 A"},
+    {kw:"90", hp:"125", fla:"278 A", mc:"MC-330a", ac3:"330 A", tor:"MT-400", torRange:"200-330 A", mccb:"ABS603c", at:"600 A"},
+    {kw:"110", hp:"150", fla:"340 A", mc:"MC-400a", ac3:"400 A", tor:"MT-400", torRange:"260-400 A", mccb:"ABS803c", at:"700 A"},
+    {kw:"132", hp:"180", fla:"400 A", mc:"MC-400a", ac3:"400 A", tor:"MT-400", torRange:"260-400 A", mccb:"ABS803c", at:"800 A"},
+    {kw:"160", hp:"220", fla:"-", mc:"-", ac3:"-", tor:"-", torRange:"-", mccb:"-", at:"-"},
+    {kw:"200", hp:"270", fla:"-", mc:"-", ac3:"-", tor:"-", torRange:"-", mccb:"-", at:"-"},
+    {kw:"250", hp:"340", fla:"-", mc:"-", ac3:"-", tor:"-", torRange:"-", mccb:"-", at:"-"}
   ],
   "380": [
-    {kw:"0.12", hp:"1/6", current:"0.4 A", mc:"MC-9a,9b", at:"9 A", tor:"MT-12,32", torRange:"0.25-0.4", mccb:"ABS33c"},
-    {kw:"0.18", hp:"1/4", current:"0.6 A", mc:"MC-9a,9b", at:"9 A", tor:"MT-12,32", torRange:"0.4-0.63", mccb:"ABS33c"},
-    {kw:"0.25", hp:"1/3", current:"0.85 A", mc:"MC-9a,9b", at:"9 A", tor:"MT-12,32", torRange:"0.63-1", mccb:"ABS33c"},
-    {kw:"0.37", hp:"1/2", current:"1.1 A", mc:"MC-9a,9b", at:"9 A", tor:"MT-12,32", torRange:"1-1.6", mccb:"ABS33c"},
-    {kw:"0.55", hp:"3/4", current:"1.5 A", mc:"MC-9a,9b", at:"9 A", tor:"MT-12,32", torRange:"1-1.6", mccb:"ABS33c"},
-    {kw:"0.75", hp:"1", current:"1.9 A", mc:"MC-9a,9b", at:"9 A", tor:"MT-12,32", torRange:"1.6-2.5", mccb:"ABS33c"},
-    {kw:"1.1", hp:"1.5", current:"2.7 A", mc:"MC-9a,9b", at:"9 A", tor:"MT-12,32", torRange:"2.5-4", mccb:"ABS33c"},
-    {kw:"1.5", hp:"2", current:"3.6 A", mc:"MC-9a,9b", at:"9 A", tor:"MT-12,32", torRange:"2.5-4", mccb:"ABS33c"},
-    {kw:"2.2", hp:"3", current:"4.9 A", mc:"MC-9a,9b", at:"9 A", tor:"MT-12,32", torRange:"4-6", mccb:"ABS33c"},
-    {kw:"3", hp:"4", current:"6.5 A", mc:"MC-9a,9b", at:"9 A", tor:"MT-12,32", torRange:"5-8", mccb:"ABS33c"},
-    {kw:"4", hp:"5.5", current:"8.5 A", mc:"MC-9a,9b", at:"9 A", tor:"MT-12,32", torRange:"6-9", mccb:"ABS33c"},
-    {kw:"5.5", hp:"7.5", current:"11.5 A", mc:"MC-12a,12b", at:"12 A", tor:"MT-12,32", torRange:"9-13", mccb:"ABS33c"},
-    {kw:"7.5", hp:"10", current:"15.5 A", mc:"MC-18a,18b", at:"18 A", tor:"MT-12,32", torRange:"12-18", mccb:"ABS33c"},
-    {kw:"11", hp:"15", current:"22 A", mc:"MC-22b", at:"22 A", tor:"MT-32", torRange:"18-25", mccb:"ABS53c"},
-    {kw:"15", hp:"20", current:"29 A", mc:"MC-32a", at:"32 A", tor:"MT-32", torRange:"22-32", mccb:"ABS63c"},
-    {kw:"18.5", hp:"25", current:"35 A", mc:"MC-40a", at:"40 A", tor:"MT-32", torRange:"22-32", mccb:"ABS103c"},
-    {kw:"22", hp:"30", current:"41 A", mc:"MC-50a", at:"50 A", tor:"MT-63", torRange:"34-50", mccb:"ABS103c"},
-    {kw:"30", hp:"40", current:"55 A", mc:"MC-65a", at:"65 A", tor:"MT-63", torRange:"45-65", mccb:"ABS103c"},
-    {kw:"37", hp:"50", current:"66 A", mc:"MC-75a", at:"75 A", tor:"MT-95", torRange:"54-75", mccb:"ABS103c"},
-    {kw:"45", hp:"60", current:"80 A", mc:"MC-85a", at:"85 A", tor:"MT-95", torRange:"70-95", mccb:"ABS203c"},
-    {kw:"55", hp:"75", current:"97 A", mc:"MC-100a", at:"105 A", tor:"MT-95", torRange:"80-100", mccb:"ABS203c"},
-    {kw:"75", hp:"100", current:"132 A", mc:"MC-150a", at:"150 A", tor:"MT-150", torRange:"110-150", mccb:"ABS203c"},
-    {kw:"90", hp:"125", current:"160 A", mc:"MC-185a", at:"185 A", tor:"MT-225", torRange:"120-185", mccb:"ABS403c"},
-    {kw:"110", hp:"150", current:"195 A", mc:"MC-225a", at:"225 A", tor:"MT-225", torRange:"160-240", mccb:"ABS403c"},
-    {kw:"132", hp:"180", current:"230 A", mc:"MC-265a", at:"265 A", tor:"MT-400", torRange:"160-240", mccb:"ABS603c"},
-    {kw:"160", hp:"220", current:"280 A", mc:"MC-330a", at:"330 A", tor:"MT-400", torRange:"200-330", mccb:"ABS603c"},
-    {kw:"200", hp:"270", current:"350 A", mc:"MC-400a", at:"400 A", tor:"MT-400", torRange:"260-400", mccb:"ABS803c"},
-    {kw:"250", hp:"340", current:"-", mc:"-", at:"-", tor:"-", torRange:"-", mccb:"-"}
+    {kw:"0.12", hp:"1/6", fla:"0.4 A", mc:"MC-9a,9b", ac3:"9 A", tor:"MT-12,32", torRange:"0.25-0.4 A", mccb:"ABS33c", at:"3 A"},
+    {kw:"0.18", hp:"1/4", fla:"0.6 A", mc:"MC-9a,9b", ac3:"9 A", tor:"MT-12,32", torRange:"0.4-0.63 A", mccb:"ABS33c", at:"3 A"},
+    {kw:"0.25", hp:"1/3", fla:"0.85 A", mc:"MC-9a,9b", ac3:"9 A", tor:"MT-12,32", torRange:"0.63-1 A", mccb:"ABS33c", at:"3 A"},
+    {kw:"0.37", hp:"1/2", fla:"1.1 A", mc:"MC-9a,9b", ac3:"9 A", tor:"MT-12,32", torRange:"1-1.6 A", mccb:"ABS33c", at:"3 A"},
+    {kw:"0.55", hp:"3/4", fla:"1.5 A", mc:"MC-9a,9b", ac3:"9 A", tor:"MT-12,32", torRange:"1-1.6 A", mccb:"ABS33c", at:"3 A"},
+    {kw:"0.75", hp:"1", fla:"1.9 A", mc:"MC-9a,9b", ac3:"9 A", tor:"MT-12,32", torRange:"1.6-2.5 A", mccb:"ABS33c", at:"5 A"},
+    {kw:"1.1", hp:"1.5", fla:"2.7 A", mc:"MC-9a,9b", ac3:"9 A", tor:"MT-12,32", torRange:"2.5-4 A", mccb:"ABS33c", at:"10 A"},
+    {kw:"1.5", hp:"2", fla:"3.6 A", mc:"MC-9a,9b", ac3:"9 A", tor:"MT-12,32", torRange:"2.5-4 A", mccb:"ABS33c", at:"10 A"},
+    {kw:"2.2", hp:"3", fla:"4.9 A", mc:"MC-9a,9b", ac3:"9 A", tor:"MT-12,32", torRange:"4-6 A", mccb:"ABS33c", at:"10 A"},
+    {kw:"3", hp:"4", fla:"6.5 A", mc:"MC-9a,9b", ac3:"9 A", tor:"MT-12,32", torRange:"5-8 A", mccb:"ABS33c", at:"15 A"},
+    {kw:"4", hp:"5.5", fla:"8.5 A", mc:"MC-9a,9b", ac3:"9 A", tor:"MT-12,32", torRange:"6-9 A", mccb:"ABS33c", at:"20 A"},
+    {kw:"5.5", hp:"7.5", fla:"11.5 A", mc:"MC-12a,12b", ac3:"12 A", tor:"MT-12,32", torRange:"9-13 A", mccb:"ABS33c", at:"30 A"},
+    {kw:"7.5", hp:"10", fla:"15.5 A", mc:"MC-18a,18b", ac3:"18 A", tor:"MT-12,32", torRange:"12-18 A", mccb:"ABS33c", at:"30 A"},
+    {kw:"11", hp:"15", fla:"22 A", mc:"MC-22b", ac3:"22 A", tor:"MT-32", torRange:"18-25 A", mccb:"ABS53c", at:"40 A"},
+    {kw:"15", hp:"20", fla:"29 A", mc:"MC-32a", ac3:"32 A", tor:"MT-32", torRange:"22-32 A", mccb:"ABS63c", at:"60 A"},
+    {kw:"18.5", hp:"25", fla:"35 A", mc:"MC-40a", ac3:"40 A", tor:"MT-32", torRange:"22-32 A", mccb:"ABS103c", at:"75 A"},
+    {kw:"22", hp:"30", fla:"41 A", mc:"MC-50a", ac3:"50 A", tor:"MT-63", torRange:"34-50 A", mccb:"ABS103c", at:"75 A"},
+    {kw:"30", hp:"40", fla:"55 A", mc:"MC-65a", ac3:"65 A", tor:"MT-63", torRange:"45-65 A", mccb:"ABS103c", at:"100 A"},
+    {kw:"37", hp:"50", fla:"66 A", mc:"MC-75a", ac3:"75 A", tor:"MT-95", torRange:"54-75 A", mccb:"ABS103c", at:"125 A"},
+    {kw:"45", hp:"60", fla:"80 A", mc:"MC-85a", ac3:"85 A", tor:"MT-95", torRange:"70-95 A", mccb:"ABS203c", at:"150 A"},
+    {kw:"55", hp:"75", fla:"97 A", mc:"MC-100a", ac3:"105 A", tor:"MT-95", torRange:"80-100 A", mccb:"ABS203c", at:"175 A"},
+    {kw:"75", hp:"100", fla:"132 A", mc:"MC-150a", ac3:"150 A", tor:"MT-150", torRange:"110-150 A", mccb:"ABS203c", at:"250 A"},
+    {kw:"90", hp:"125", fla:"160 A", mc:"MC-185a", ac3:"185 A", tor:"MT-225", torRange:"120-185 A", mccb:"ABS403c", at:"350 A"},
+    {kw:"110", hp:"150", fla:"195 A", mc:"MC-225a", ac3:"225 A", tor:"MT-225", torRange:"160-240 A", mccb:"ABS403c", at:"400 A"},
+    {kw:"132", hp:"180", fla:"230 A", mc:"MC-265a", ac3:"265 A", tor:"MT-400", torRange:"160-240 A", mccb:"ABS603c", at:"500 A"},
+    {kw:"160", hp:"220", fla:"280 A", mc:"MC-330a", ac3:"330 A", tor:"MT-400", torRange:"200-330 A", mccb:"ABS603c", at:"600 A"},
+    {kw:"200", hp:"270", fla:"350 A", mc:"MC-400a", ac3:"400 A", tor:"MT-400", torRange:"260-400 A", mccb:"ABS803c", at:"800 A"},
+    {kw:"250", hp:"340", fla:"-", mc:"-", ac3:"-", tor:"-", torRange:"-", mccb:"-", at:"-"}
   ],
   "500": [
-    {kw:"0.12", hp:"1/6", current:"0.32 A", mc:"MC-9a,9b", at:"7 A", tor:"MT-12,32", torRange:"0.25-0.4", mccb:"ABS33c"},
-    {kw:"0.18", hp:"1/4", current:"0.48 A", mc:"MC-9a,9b", at:"7 A", tor:"MT-12,32", torRange:"0.4-0.63", mccb:"ABS33c"},
-    {kw:"0.25", hp:"1/3", current:"0.68 A", mc:"MC-9a,9b", at:"7 A", tor:"MT-12,32", torRange:"0.63-1", mccb:"ABS33c"},
-    {kw:"0.37", hp:"1/2", current:"0.88 A", mc:"MC-9a,9b", at:"7 A", tor:"MT-12,32", torRange:"0.63-1", mccb:"ABS33c"},
-    {kw:"0.55", hp:"3/4", current:"1.2 A", mc:"MC-9a,9b", at:"7 A", tor:"MT-12,32", torRange:"1-1.6", mccb:"ABS33c"},
-    {kw:"0.75", hp:"1", current:"1.5 A", mc:"MC-9a,9b", at:"7 A", tor:"MT-12,32", torRange:"1-1.6", mccb:"ABS33c"},
-    {kw:"1.1", hp:"1.5", current:"2.2 A", mc:"MC-9a,9b", at:"7 A", tor:"MT-12,32", torRange:"1.6-2.5", mccb:"ABS33c"},
-    {kw:"1.5", hp:"2", current:"2.9 A", mc:"MC-9a,9b", at:"7 A", tor:"MT-12,32", torRange:"2.5-4", mccb:"ABS33c"},
-    {kw:"2.2", hp:"3", current:"3.9 A", mc:"MC-9a,9b", at:"7 A", tor:"MT-12,32", torRange:"2.5-4", mccb:"ABS33c"},
-    {kw:"3", hp:"4", current:"5.2 A", mc:"MC-9a,9b", at:"7 A", tor:"MT-12,32", torRange:"4-6", mccb:"ABS33c"},
-    {kw:"4", hp:"5.5", current:"6.8 A", mc:"MC-9a,9b", at:"7 A", tor:"MT-12,32", torRange:"5-8", mccb:"ABS33c"},
-    {kw:"5.5", hp:"7.5", current:"9.2 A", mc:"MC-12a,12b", at:"12 A", tor:"MT-12,32", torRange:"7-10", mccb:"ABS33c"},
-    {kw:"7.5", hp:"10", current:"12.4 A", mc:"MC-18a,18b", at:"13 A", tor:"MT-12,32", torRange:"9-13", mccb:"ABS33c"},
-    {kw:"11", hp:"15", current:"17.6 A", mc:"MC-22b", at:"20 A", tor:"MT-32", torRange:"12-18", mccb:"ABS53c"},
-    {kw:"15", hp:"20", current:"23 A", mc:"MC-32a", at:"28 A", tor:"MT-32", torRange:"18-25", mccb:"ABS53c"},
-    {kw:"18.5", hp:"25", current:"28 A", mc:"MC-32a", at:"28 A", tor:"MT-32", torRange:"18-25", mccb:"ABS63c"},
-    {kw:"22", hp:"30", current:"33 A", mc:"MC-50a", at:"43 A", tor:"MT-63", torRange:"28-40", mccb:"ABS103c"},
-    {kw:"30", hp:"40", current:"44 A", mc:"MC-65a", at:"60 A", tor:"MT-63", torRange:"34-50", mccb:"ABS103c"},
-    {kw:"37", hp:"50", current:"53 A", mc:"MC-65a", at:"60 A", tor:"MT-63", torRange:"45-65", mccb:"ABS103c"},
-    {kw:"45", hp:"60", current:"64 A", mc:"MC-75a", at:"64 A", tor:"MT-95", torRange:"54-75", mccb:"ABS103c"},
-    {kw:"55", hp:"75", current:"78 A", mc:"MC-100a", at:"85 A", tor:"MT-95", torRange:"63-85", mccb:"ABS203c"},
-    {kw:"75", hp:"100", current:"106 A", mc:"MC-185a", at:"180 A", tor:"MT-225", torRange:"85-125", mccb:"ABS203c"},
-    {kw:"90", hp:"125", current:"128 A", mc:"MC-185a", at:"180 A", tor:"MT-225", torRange:"100-160", mccb:"ABS203c"},
-    {kw:"110", hp:"150", current:"156 A", mc:"MC-185a", at:"180 A", tor:"MT-225", torRange:"120-185", mccb:"ABS403c"},
-    {kw:"132", hp:"180", current:"184 A", mc:"MC-225a", at:"200 A", tor:"MT-225", torRange:"120-185", mccb:"ABS403c"},
-    {kw:"160", hp:"220", current:"224 A", mc:"MC-265a", at:"225 A", tor:"MT-400", torRange:"160-240", mccb:"ABS603c"},
-    {kw:"200", hp:"270", current:"280 A", mc:"MC-400a", at:"350 A", tor:"MT-400", torRange:"200-330", mccb:"ABS603c"},
-    {kw:"250", hp:"340", current:"344 A", mc:"MC-400a", at:"350 A", tor:"MT-400", torRange:"260-400", mccb:"ABS803c"}
+    {kw:"0.12", hp:"1/6", fla:"0.32 A", mc:"MC-9a,9b", ac3:"7 A", tor:"MT-12,32", torRange:"0.25-0.4 A", mccb:"ABS33c", at:"3 A"},
+    {kw:"0.18", hp:"1/4", fla:"0.48 A", mc:"MC-9a,9b", ac3:"7 A", tor:"MT-12,32", torRange:"0.4-0.63 A", mccb:"ABS33c", at:"3 A"},
+    {kw:"0.25", hp:"1/3", fla:"0.68 A", mc:"MC-9a,9b", ac3:"7 A", tor:"MT-12,32", torRange:"0.63-1 A", mccb:"ABS33c", at:"3 A"},
+    {kw:"0.37", hp:"1/2", fla:"0.88 A", mc:"MC-9a,9b", ac3:"7 A", tor:"MT-12,32", torRange:"0.63-1 A", mccb:"ABS33c", at:"3 A"},
+    {kw:"0.55", hp:"3/4", fla:"1.2 A", mc:"MC-9a,9b", ac3:"7 A", tor:"MT-12,32", torRange:"1-1.6 A", mccb:"ABS33c", at:"3 A"},
+    {kw:"0.75", hp:"1", fla:"1.5 A", mc:"MC-9a,9b", ac3:"7 A", tor:"MT-12,32", torRange:"1-1.6 A", mccb:"ABS33c", at:"3 A"},
+    {kw:"1.1", hp:"1.5", fla:"2.2 A", mc:"MC-9a,9b", ac3:"7 A", tor:"MT-12,32", torRange:"1.6-2.5 A", mccb:"ABS33c", at:"5 A"},
+    {kw:"1.5", hp:"2", fla:"2.9 A", mc:"MC-9a,9b", ac3:"7 A", tor:"MT-12,32", torRange:"2.5-4 A", mccb:"ABS33c", at:"10 A"},
+    {kw:"2.2", hp:"3", fla:"3.9 A", mc:"MC-9a,9b", ac3:"7 A", tor:"MT-12,32", torRange:"2.5-4 A", mccb:"ABS33c", at:"10 A"},
+    {kw:"3", hp:"4", fla:"5.2 A", mc:"MC-9a,9b", ac3:"7 A", tor:"MT-12,32", torRange:"4-6 A", mccb:"ABS33c", at:"10 A"},
+    {kw:"4", hp:"5.5", fla:"6.8 A", mc:"MC-9a,9b", ac3:"7 A", tor:"MT-12,32", torRange:"5-8 A", mccb:"ABS33c", at:"15 A"},
+    {kw:"5.5", hp:"7.5", fla:"9.2 A", mc:"MC-12a,12b", ac3:"12 A", tor:"MT-12,32", torRange:"7-10 A", mccb:"ABS33c", at:"20 A"},
+    {kw:"7.5", hp:"10", fla:"12.4 A", mc:"MC-18a,18b", ac3:"13 A", tor:"MT-12,32", torRange:"9-13 A", mccb:"ABS33c", at:"30 A"},
+    {kw:"11", hp:"15", fla:"17.6 A", mc:"MC-22b", ac3:"20 A", tor:"MT-32", torRange:"12-18 A", mccb:"ABS53c", at:"40 A"},
+    {kw:"15", hp:"20", fla:"23 A", mc:"MC-32a", ac3:"28 A", tor:"MT-32", torRange:"18-25 A", mccb:"ABS53c", at:"50 A"},
+    {kw:"18.5", hp:"25", fla:"28 A", mc:"MC-32a", ac3:"28 A", tor:"MT-32", torRange:"22-32 A", mccb:"ABS63c", at:"60 A"},
+    {kw:"22", hp:"30", fla:"33 A", mc:"MC-50a", ac3:"43 A", tor:"MT-63", torRange:"28-40 A", mccb:"ABS103c", at:"75 A"},
+    {kw:"30", hp:"40", fla:"44 A", mc:"MC-65a", ac3:"60 A", tor:"MT-63", torRange:"34-50 A", mccb:"ABS103c", at:"100 A"},
+    {kw:"37", hp:"50", fla:"53 A", mc:"MC-65a", ac3:"60 A", tor:"MT-63", torRange:"45-65 A", mccb:"ABS103c", at:"100 A"},
+    {kw:"45", hp:"60", fla:"64 A", mc:"MC-75a", ac3:"64 A", tor:"MT-95", torRange:"54-75 A", mccb:"ABS103c", at:"125 A"},
+    {kw:"55", hp:"75", fla:"78 A", mc:"MC-100a", ac3:"85 A", tor:"MT-95", torRange:"63-85 A", mccb:"ABS203c", at:"150 A"},
+    {kw:"75", hp:"100", fla:"106 A", mc:"MC-185a", ac3:"180 A", tor:"MT-225", torRange:"85-125 A", mccb:"ABS203c", at:"250 A"},
+    {kw:"90", hp:"125", fla:"128 A", mc:"MC-185a", ac3:"180 A", tor:"MT-225", torRange:"100-160 A", mccb:"ABS203c", at:"350 A"},
+    {kw:"110", hp:"150", fla:"156 A", mc:"MC-185a", ac3:"180 A", tor:"MT-225", torRange:"120-185 A", mccb:"ABS403c", at:"350 A"},
+    {kw:"132", hp:"180", fla:"184 A", mc:"MC-225a", ac3:"200 A", tor:"MT-225", torRange:"120-185 A", mccb:"ABS403c", at:"400 A"},
+    {kw:"160", hp:"220", fla:"224 A", mc:"MC-265a", ac3:"225 A", tor:"MT-400", torRange:"160-240 A", mccb:"ABS603c", at:"500 A"},
+    {kw:"200", hp:"270", fla:"280 A", mc:"MC-400a", ac3:"350 A", tor:"MT-400", torRange:"200-330 A", mccb:"ABS603c", at:"600 A"},
+    {kw:"250", hp:"340", fla:"344 A", mc:"MC-400a", ac3:"350 A", tor:"MT-400", torRange:"260-400 A", mccb:"ABS803c", at:"800 A"}
   ]
 };
 
@@ -709,19 +709,24 @@ function initDolValueOptions(){
   }
 
   valueEl.disabled = false;
+  const first = document.createElement("option");
+  first.value = "";
+  first.textContent = "값 선택";
+  valueEl.appendChild(first);
+
   rows.forEach((row, idx)=>{
     const o = document.createElement("option");
     o.value = String(idx);
     o.textContent = `${row.kw} kW (${row.hp} HP)`;
     valueEl.appendChild(o);
   });
-  renderDolResult();
+  clearDolResult();
 }
 
 function clearDolResult(){
-  byId("dolOutPower").textContent = "";
-  byId("dolCurrent").textContent = "";
+  byId("dolFla").textContent = "";
   byId("dolMc").textContent = "";
+  byId("dolAc3").textContent = "";
   byId("dolAt").textContent = "";
   byId("dolTor").textContent = "";
   byId("dolTorRange").textContent = "";
@@ -730,16 +735,21 @@ function clearDolResult(){
 
 function renderDolResult(){
   const voltage = byId("dolVoltage").value;
-  const idx = Number(byId("dolValue").value || 0);
+  const value = byId("dolValue").value;
+  if(!voltage || value === ""){
+    clearDolResult();
+    return;
+  }
+  const idx = Number(value);
   const row = (DOL_TABLE[voltage] || [])[idx];
   if(!row){
     clearDolResult();
     return;
   }
 
-  byId("dolOutPower").textContent = `${row.kw} kW (${row.hp} HP)`;
-  byId("dolCurrent").textContent = row.current;
+  byId("dolFla").textContent = row.fla;
   byId("dolMc").textContent = row.mc;
+  byId("dolAc3").textContent = row.ac3;
   byId("dolAt").textContent = row.at;
   byId("dolTor").textContent = row.tor;
   byId("dolTorRange").textContent = row.torRange;
